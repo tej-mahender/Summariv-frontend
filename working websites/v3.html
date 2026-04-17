@@ -1,0 +1,1599 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>VideoRAG</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #f7f5f0;
+        --surface: #ffffff;
+        --surface2: #f0ede6;
+        --ink: #18160f;
+        --ink2: #4b4840;
+        --ink3: #9b9890;
+        --amber: #c07c2a;
+        --amber-bg: #fdf3e3;
+        --amber-border: #e8c07a;
+        --teal: #1a7a6a;
+        --teal-bg: #e4f4f0;
+        --rose: #b03a42;
+        --rose-bg: #faebec;
+        --green: #2a7a3a;
+        --green-bg: #e4f4e8;
+        --border: rgba(24, 22, 15, 0.1);
+        --border2: rgba(24, 22, 15, 0.18);
+        --r: 10px;
+        --r2: 16px;
+        --fd: "Syne", sans-serif;
+        --fs: "Instrument Sans", sans-serif;
+      }
+      html {
+        font-size: 16px;
+      }
+      body {
+        font-family: var(--fs);
+        background: var(--bg);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+
+      /* ── TOP NAV ── */
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        height: 56px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .nav-logo {
+        width: 30px;
+        height: 30px;
+        background: var(--ink);
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .nav-logo svg {
+        width: 16px;
+        height: 16px;
+      }
+      .nav-title {
+        font-family: var(--fd);
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+      .nav-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 99px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: var(--rose-bg);
+        color: var(--rose);
+        transition: all 0.35s ease;
+        font-family: var(--fs);
+      }
+      .nav-pill.ready {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+      .nav-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+      }
+      .nav-pill.ready .nav-dot {
+        animation: blink 2s infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .inp-sm {
+        padding: 7px 12px;
+        border: 1px solid var(--border2);
+        border-radius: 8px;
+        font-family: var(--fs);
+        font-size: 0.8rem;
+        color: var(--ink);
+        background: var(--bg);
+        outline: none;
+        width: 240px;
+        transition: border-color 0.2s;
+      }
+      .inp-sm:focus {
+        border-color: var(--amber);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-family: var(--fd);
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        transition: all 0.16s ease;
+        white-space: nowrap;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-dark {
+        background: var(--ink);
+        color: #fff;
+      }
+      .btn-dark:hover {
+        background: #2d2a22;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink2);
+        border: 1px solid var(--border2);
+      }
+      .btn-ghost:hover {
+        background: var(--surface2);
+      }
+      .btn-amber {
+        background: var(--amber);
+        color: #fff;
+      }
+      .btn-amber:hover {
+        background: #a86820;
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+      }
+
+      /* ── LAYOUT ── */
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 0;
+        height: calc(100vh - 56px);
+      }
+
+      /* ── VIDEO PANEL (LEFT) ── */
+      .video-panel {
+        display: flex;
+        flex-direction: column;
+        background: var(--ink);
+        position: relative;
+        overflow: hidden;
+      }
+      .video-stage {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        min-height: 0;
+      }
+      video#main-video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        background: #000;
+      }
+      .video-drop-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .video-drop-overlay.drag {
+        background: rgba(192, 124, 42, 0.15);
+      }
+      .drop-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s;
+      }
+      .video-drop-overlay.drag .drop-circle {
+        border-color: var(--amber);
+      }
+      .drop-circle svg {
+        width: 28px;
+        height: 28px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .drop-text {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 0.85rem;
+        text-align: center;
+        line-height: 1.5;
+      }
+      .drop-sub {
+        color: rgba(255, 255, 255, 0.25);
+        font-size: 0.75rem;
+      }
+      .video-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: rgba(0, 0, 0, 0.6);
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .video-filename {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .video-time {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* clip highlight bar */
+      .clip-bar {
+        position: absolute;
+        bottom: 48px;
+        left: 16px;
+        right: 16px;
+        background: rgba(192, 124, 42, 0.9);
+        border-radius: 6px;
+        padding: 6px 12px;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        animation: fadeIn 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .clip-bar.show {
+        display: flex;
+      }
+      .clip-bar-text {
+        font-size: 0.78rem;
+        color: #fff;
+        font-weight: 500;
+      }
+      .clip-bar-btn {
+        background: rgba(255, 255, 255, 0.25);
+        border: none;
+        border-radius: 5px;
+        padding: 4px 10px;
+        font-size: 0.73rem;
+        color: #fff;
+        cursor: pointer;
+        font-family: var(--fd);
+        font-weight: 500;
+      }
+      .clip-bar-btn:hover {
+        background: rgba(255, 255, 255, 0.35);
+      }
+
+      /* ── RIGHT PANEL ── */
+      .right-panel {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      /* tabs */
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+      }
+      .tab {
+        flex: 1;
+        padding: 12px 8px;
+        font-family: var(--fd);
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--ink3);
+        cursor: pointer;
+        text-align: center;
+        border-bottom: 2px solid transparent;
+        transition: all 0.18s;
+        letter-spacing: 0.02em;
+      }
+      .tab.active {
+        color: var(--ink);
+        border-bottom-color: var(--amber);
+      }
+      .tab-panel {
+        display: none;
+        flex: 1;
+        overflow-y: auto;
+        flex-direction: column;
+      }
+      .tab-panel.active {
+        display: flex;
+      }
+
+      /* ── PROCESS TAB ── */
+      .process-inner {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .upload-card {
+        border: 2px dashed var(--border2);
+        border-radius: var(--r2);
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--bg);
+      }
+      .upload-card:hover,
+      .upload-card.drag {
+        border-color: var(--amber);
+        background: var(--amber-bg);
+      }
+      .upload-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--surface2);
+        margin: 0 auto 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .upload-card-icon svg {
+        width: 20px;
+        height: 20px;
+        color: var(--ink2);
+      }
+      .upload-card h4 {
+        font-family: var(--fd);
+        font-size: 0.88rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .upload-card p {
+        font-size: 0.75rem;
+        color: var(--ink3);
+      }
+      .upload-card .file-name {
+        font-size: 0.78rem;
+        color: var(--amber);
+        font-weight: 500;
+        margin-top: 6px;
+        word-break: break-all;
+      }
+
+      /* stages loader */
+      .stages {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .stage-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        position: relative;
+      }
+      .stage-item:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        left: 15px;
+        top: 34px;
+        bottom: 0;
+        width: 1px;
+        background: var(--border);
+      }
+      .stage-item:not(:last-child).done::after {
+        background: var(--green);
+      }
+      .stage-dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface2);
+        border: 1.5px solid var(--border2);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+      }
+      .stage-dot svg {
+        width: 13px;
+        height: 13px;
+        color: var(--ink3);
+      }
+      .stage-item.active .stage-dot {
+        background: var(--amber-bg);
+        border-color: var(--amber-border);
+      }
+      .stage-item.active .stage-dot svg {
+        color: var(--amber);
+      }
+      .stage-item.done .stage-dot {
+        background: var(--green-bg);
+        border-color: var(--green);
+      }
+      .stage-item.done .stage-dot svg {
+        color: var(--green);
+      }
+      .stage-item.error .stage-dot {
+        background: var(--rose-bg);
+        border-color: var(--rose);
+      }
+      .stage-item.error .stage-dot svg {
+        color: var(--rose);
+      }
+      .stage-body {
+        flex: 1;
+        padding-top: 4px;
+      }
+      .stage-name {
+        font-size: 0.82rem;
+        font-weight: 500;
+        font-family: var(--fd);
+        color: var(--ink2);
+      }
+      .stage-item.active .stage-name {
+        color: var(--ink);
+      }
+      .stage-item.done .stage-name {
+        color: var(--green);
+      }
+      .stage-sub {
+        font-size: 0.72rem;
+        color: var(--ink3);
+        margin-top: 2px;
+        line-height: 1.45;
+      }
+      .stage-item.active .stage-sub {
+        color: var(--amber);
+      }
+
+      /* spinner ring */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        width: 13px;
+        height: 13px;
+        border: 2px solid var(--amber-border);
+        border-top-color: var(--amber);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+
+      /* stats row */
+      .stats-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+      .stat-box {
+        background: var(--bg);
+        border-radius: var(--r);
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+      }
+      .stat-box .val {
+        font-family: var(--fd);
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .stat-box .lbl {
+        font-size: 0.68rem;
+        color: var(--ink3);
+        margin-top: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* ── ASK TAB ── */
+      .ask-inner {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        flex: 1;
+      }
+
+      .search-box {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+      .search-wrap {
+        flex: 1;
+        position: relative;
+      }
+      .search-ico {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--ink3);
+        pointer-events: none;
+      }
+      .search-ico svg {
+        width: 14px;
+        height: 14px;
+      }
+      .search-inp {
+        width: 100%;
+        padding: 10px 11px 10px 34px;
+        border: 1px solid var(--border2);
+        border-radius: var(--r);
+        font-family: var(--fs);
+        font-size: 0.85rem;
+        color: var(--ink);
+        background: var(--bg);
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .search-inp:focus {
+        border-color: var(--amber);
+        box-shadow: 0 0 0 3px rgba(192, 124, 42, 0.1);
+      }
+      .search-inp::placeholder {
+        color: var(--ink3);
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        padding: 4px 11px;
+        border-radius: 99px;
+        border: 1px solid var(--border2);
+        font-size: 0.72rem;
+        color: var(--ink2);
+        cursor: pointer;
+        background: var(--bg);
+        transition: all 0.15s;
+        font-family: var(--fs);
+      }
+      .chip:hover {
+        border-color: var(--amber);
+        color: var(--amber);
+        background: var(--amber-bg);
+      }
+
+      /* answer card */
+      .answer-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .answer-box {
+        background: var(--bg);
+        border-radius: var(--r2);
+        padding: 1rem 1.1rem;
+        border: 1px solid var(--border);
+      }
+      .answer-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 500;
+        color: var(--teal);
+        margin-bottom: 6px;
+      }
+      .answer-text {
+        font-family: "Syne", sans-serif;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.55;
+        color: var(--ink);
+      }
+
+      .hits-title {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ink3);
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      .hit-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        margin-bottom: 6px;
+      }
+      .hit-badge {
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-size: 0.62rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .hit-badge.audio {
+        background: var(--amber-bg);
+        color: var(--amber);
+      }
+      .hit-badge.visual {
+        background: var(--teal-bg);
+        color: var(--teal);
+      }
+      .hit-row-text {
+        font-size: 0.78rem;
+        color: var(--ink2);
+        line-height: 1.45;
+        flex: 1;
+      }
+      .hit-ts {
+        font-size: 0.68rem;
+        color: var(--ink3);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+        margin-top: 1px;
+      }
+
+      /* empty state */
+      .empty-ask {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+        padding: 2rem;
+      }
+      .empty-ask svg {
+        width: 36px;
+        height: 36px;
+        color: var(--border2);
+      }
+      .empty-ask p {
+        font-size: 0.82rem;
+        color: var(--ink3);
+        max-width: 220px;
+        line-height: 1.55;
+      }
+
+      /* skeleton */
+      .skel {
+        background: var(--surface2);
+        border-radius: 5px;
+        height: 12px;
+        animation: shimmer 1.3s infinite;
+      }
+      @keyframes shimmer {
+        0% {
+          opacity: 0.6;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.6;
+        }
+      }
+
+      /* summary tab */
+      .summary-inner {
+        padding: 1.25rem;
+        flex: 1;
+      }
+      .summary-inner p {
+        font-size: 0.82rem;
+        color: var(--ink2);
+        line-height: 1.8;
+        white-space: pre-line;
+      }
+
+      /* toast */
+      #toast {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(60px);
+        background: var(--ink);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 999;
+        white-space: nowrap;
+      }
+      #toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+      #toast.err {
+        background: var(--rose);
+      }
+
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 99px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav class="nav">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <svg viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.4" />
+            <polygon points="6.5,5.5 11,8 6.5,10.5" fill="white" />
+          </svg>
+        </div>
+        <span class="nav-title">VideoRAG</span>
+      </div>
+      <div class="nav-right">
+        <input
+          class="inp-sm"
+          id="api-url"
+          type="text"
+          placeholder="https://xxxx.ngrok.io  — paste ngrok URL"
+        />
+        <button class="btn btn-ghost btn-sm" onclick="checkStatus()">
+          Connect
+        </button>
+        <div class="nav-pill" id="status-pill">
+          <span class="nav-dot"></span>
+          <span id="status-text">Not connected</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN LAYOUT -->
+    <div class="layout">
+      <!-- ═══ VIDEO HERO ═══ -->
+      <div class="video-panel">
+        <div class="video-stage" id="video-stage">
+          <!-- drop overlay (shown when no video loaded) -->
+          <div
+            class="video-drop-overlay"
+            id="drop-overlay"
+            onclick="document.getElementById('file-inp').click()"
+          >
+            <div class="drop-circle">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <div class="drop-text">
+              Drop an MP4 here<br />or click to upload
+            </div>
+            <div class="drop-sub">Supports up to ~500MB</div>
+          </div>
+
+          <video id="main-video" controls style="display: none"></video>
+
+          <!-- clip seek bar -->
+          <div class="clip-bar" id="clip-bar">
+            <span class="clip-bar-text" id="clip-bar-text"
+              >Best clip found</span
+            >
+            <button class="clip-bar-btn" id="clip-jump-btn">
+              Jump to clip
+            </button>
+          </div>
+        </div>
+
+        <div class="video-bar">
+          <span class="video-filename" id="video-filename"
+            >No video loaded</span
+          >
+          <span class="video-time" id="video-dur"></span>
+          <button
+            class="btn btn-ghost btn-sm"
+            style="
+              color: rgba(255, 255, 255, 0.5);
+              border-color: rgba(255, 255, 255, 0.12);
+              font-size: 0.72rem;
+            "
+            onclick="document.getElementById('file-inp').click()"
+          >
+            Change
+          </button>
+        </div>
+
+        <input
+          type="file"
+          id="file-inp"
+          accept="video/mp4"
+          style="display: none"
+          onchange="onFileSelect(this)"
+        />
+      </div>
+
+      <!-- ═══ RIGHT PANEL ═══ -->
+      <div class="right-panel">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('process', this)">
+            Process
+          </div>
+          <div class="tab" onclick="switchTab('ask', this)">Ask</div>
+          <div class="tab" onclick="switchTab('summary', this)">Summary</div>
+        </div>
+
+        <!-- PROCESS TAB -->
+        <div class="tab-panel active" id="tab-process">
+          <div class="process-inner">
+            <div
+              class="upload-card"
+              id="upload-card"
+              onclick="document.getElementById('file-inp').click()"
+            >
+              <div class="upload-card-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </div>
+              <h4>Upload video</h4>
+              <p>Click or drag a file to the player</p>
+              <div
+                class="file-name"
+                id="upload-filename"
+                style="display: none"
+              ></div>
+            </div>
+
+            <button
+              class="btn btn-amber"
+              id="process-btn"
+              onclick="uploadAndProcess()"
+              disabled
+              style="width: 100%; justify-content: center"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              Run Pipeline
+            </button>
+
+            <!-- STAGES -->
+            <div class="stages" id="stages-list">
+              <div class="stage-item" id="s-upload">
+                <div class="stage-dot">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M8 11V5M5 8l3-3 3 3" />
+                    <rect
+                      x="2"
+                      y="12"
+                      width="12"
+                      height="1.5"
+                      rx=".75"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                  </svg>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-name">Upload video</div>
+                  <div class="stage-sub">Send MP4 to API</div>
+                </div>
+              </div>
+              <div class="stage-item" id="s-whisper">
+                <div class="stage-dot">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M8 2v12M5 4v8M2 6v4M11 4v8M14 6v4" />
+                  </svg>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-name">Whisper transcription</div>
+                  <div class="stage-sub">Speech → text segments</div>
+                </div>
+              </div>
+              <div class="stage-item" id="s-frames">
+                <div class="stage-dot">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <rect x="2" y="3" width="12" height="10" rx="1.5" />
+                    <path d="M5 7h6M5 9.5h4" />
+                  </svg>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-name">Frame extraction</div>
+                  <div class="stage-sub">1 frame every 2 seconds</div>
+                </div>
+              </div>
+              <div class="stage-item" id="s-blip">
+                <div class="stage-dot">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <circle cx="8" cy="8" r="3" />
+                    <path d="M2 8h1M13 8h1M8 2v1M8 13v1" />
+                  </svg>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-name">BLIP captioning</div>
+                  <div class="stage-sub">Visual description per frame</div>
+                </div>
+              </div>
+              <div class="stage-item" id="s-embed">
+                <div class="stage-dot">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <circle cx="4" cy="8" r="2" />
+                    <circle cx="12" cy="4" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 8h3M10 5.5l-1.5 1.5M10 10.5l-1.5-1.5" />
+                  </svg>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-name">Text embeddings</div>
+                  <div class="stage-sub">FAISS vector index (audio)</div>
+                </div>
+              </div>
+              <div class="stage-item" id="s-vembed">
+                <div class="stage-dot">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <rect x="1" y="3" width="5" height="5" rx="1" />
+                    <rect x="10" y="3" width="5" height="5" rx="1" />
+                    <rect x="1" y="9" width="5" height="5" rx="1" />
+                    <rect x="10" y="9" width="5" height="5" rx="1" />
+                  </svg>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-name">Visual embeddings</div>
+                  <div class="stage-sub">FAISS vector index (visual)</div>
+                </div>
+              </div>
+              <div class="stage-item" id="s-summary">
+                <div class="stage-dot">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path d="M3 4h10M3 7h10M3 10h6" />
+                  </svg>
+                </div>
+                <div class="stage-body">
+                  <div class="stage-name">Flan-T5 summary</div>
+                  <div class="stage-sub">Chunked speech summarisation</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- STATS (shown after processing) -->
+            <div id="stats-block" style="display: none">
+              <div class="stats-row">
+                <div class="stat-box">
+                  <div class="val" id="stat-segs">—</div>
+                  <div class="lbl">Audio segs</div>
+                </div>
+                <div class="stat-box">
+                  <div class="val" id="stat-vis">—</div>
+                  <div class="lbl">Visual caps</div>
+                </div>
+                <div class="stat-box">
+                  <div class="val" id="stat-done" style="color: var(--green)">
+                    ✓
+                  </div>
+                  <div class="lbl">Status</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ASK TAB -->
+        <div class="tab-panel" id="tab-ask">
+          <div class="ask-inner">
+            <div class="search-box">
+              <div class="search-wrap">
+                <div class="search-ico">
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <circle cx="7" cy="7" r="4.5" />
+                    <line x1="10.5" y1="10.5" x2="14" y2="14" />
+                  </svg>
+                </div>
+                <input
+                  class="search-inp"
+                  id="q-inp"
+                  type="text"
+                  placeholder="Ask anything about the video…"
+                  onkeydown="if (event.key === 'Enter') doQuery();"
+                />
+              </div>
+              <button class="btn btn-dark btn-sm" onclick="doQuery()">
+                Ask
+              </button>
+            </div>
+            <div class="chips">
+              <span class="chip" onclick="useChip(this)">Main topic?</span>
+              <span class="chip" onclick="useChip(this)"
+                >Key concepts explained</span
+              >
+              <span class="chip" onclick="useChip(this)">Examples shown</span>
+              <span class="chip" onclick="useChip(this)"
+                >Conclusion summary</span
+              >
+            </div>
+            <div
+              id="answer-area"
+              style="flex: 1; display: flex; flex-direction: column"
+            >
+              <div class="empty-ask">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                >
+                  <path
+                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                  />
+                </svg>
+                <p>
+                  Ask a question — VideoRAG searches both audio and visual
+                  streams.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUMMARY TAB -->
+        <div class="tab-panel" id="tab-summary">
+          <div class="summary-inner">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+              "
+            >
+              <span
+                style="
+                  font-family: var(--fd);
+                  font-size: 0.9rem;
+                  font-weight: 600;
+                "
+                >Video Summary</span
+              >
+              <button class="btn btn-ghost btn-sm" onclick="loadSummary()">
+                Refresh
+              </button>
+            </div>
+            <p id="summary-text" style="color: var(--ink3); font-size: 0.82rem">
+              Process a video first to see its summary.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+      let apiBase = "",
+        selFile = null,
+        clipStart = 0,
+        clipEnd = 10;
+
+      function toast(msg, err = false) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.className = "show" + (err ? " err" : "");
+        clearTimeout(el._t);
+        el._t = setTimeout(() => (el.className = ""), 3000);
+      }
+      function fmt(s) {
+        const m = Math.floor(s / 60),
+          ss = Math.floor(s % 60);
+        return `${m}:${String(ss).padStart(2, "0")}`;
+      }
+      function getBase() {
+        const v = document
+          .getElementById("api-url")
+          .value.trim()
+          .replace(/\/$/, "");
+        if (!v) {
+          toast("Paste your ngrok URL first", true);
+          return null;
+        }
+        return v;
+      }
+
+      /* ── tabs ── */
+      function switchTab(id, el) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+        el.classList.add("active");
+        document.getElementById("tab-" + id).classList.add("active");
+        if (id === "summary") loadSummary();
+      }
+
+      /* ── file select ── */
+      function onFileSelect(inp) {
+        const f = inp.files[0];
+        if (!f) return;
+        selFile = f;
+        const url = URL.createObjectURL(f);
+        const vid = document.getElementById("main-video");
+        vid.src = url;
+        vid.style.display = "block";
+        document.getElementById("drop-overlay").style.display = "none";
+        document.getElementById("video-filename").textContent = f.name;
+        vid.onloadedmetadata = () => {
+          document.getElementById("video-dur").textContent = fmt(vid.duration);
+        };
+        document.getElementById("upload-filename").textContent = f.name;
+        document.getElementById("upload-filename").style.display = "block";
+        document.getElementById("process-btn").disabled = false;
+        toast("Video loaded — click Run Pipeline to process");
+      }
+
+      /* ── drag on video ── */
+      const vo = document.getElementById("drop-overlay");
+      document
+        .getElementById("video-stage")
+        .addEventListener("dragover", (e) => {
+          e.preventDefault();
+          vo.classList.add("drag");
+        });
+      document
+        .getElementById("video-stage")
+        .addEventListener("dragleave", () => vo.classList.remove("drag"));
+      document.getElementById("video-stage").addEventListener("drop", (e) => {
+        e.preventDefault();
+        vo.classList.remove("drag");
+        const f = e.dataTransfer.files[0];
+        if (f && f.type === "video/mp4") {
+          const dt = new DataTransfer();
+          dt.items.add(f);
+          document.getElementById("file-inp").files = dt.files;
+          onFileSelect(document.getElementById("file-inp"));
+        } else toast("Please drop an MP4 file", true);
+      });
+
+      /* ── status ── */
+      async function checkStatus() {
+        const base = getBase();
+        if (!base) return;
+        apiBase = base;
+        try {
+          const r = await fetch(`${base}/status`);
+          const d = await r.json();
+          const pill = document.getElementById("status-pill");
+          if (d.ready) {
+            pill.className = "nav-pill ready";
+            document.getElementById("status-text").textContent = "Ready";
+            document.getElementById("stat-segs").textContent = d.segment_count;
+            document.getElementById("stat-vis").textContent = d.visual_count;
+            document.getElementById("stats-block").style.display = "block";
+            toast("Connected — pipeline ready");
+          } else {
+            pill.className = "nav-pill";
+            document.getElementById("status-text").textContent = "Not ready";
+            toast("Connected but video not processed yet");
+          }
+        } catch (e) {
+          toast("Cannot reach API — check URL", true);
+        }
+      }
+
+      /* ── stage helpers ── */
+      const STAGES = [
+        "s-upload",
+        "s-whisper",
+        "s-frames",
+        "s-blip",
+        "s-embed",
+        "s-vembed",
+        "s-summary",
+      ];
+      const STAGE_SUBS = {
+        "s-upload": "Uploading video…",
+        "s-whisper": "Transcribing speech with Whisper base…",
+        "s-frames": "Extracting frames (1 per 2s)…",
+        "s-blip": "Generating BLIP captions per frame…",
+        "s-embed": "Building audio FAISS index…",
+        "s-vembed": "Building visual FAISS index…",
+        "s-summary": "Summarising with Flan-T5 chunks…",
+      };
+      const STAGE_DONE = {
+        "s-upload": "Video uploaded",
+        "s-whisper": "Transcription complete",
+        "s-frames": "Frames extracted",
+        "s-blip": "Captions generated",
+        "s-embed": "Text embeddings done",
+        "s-vembed": "Visual embeddings done",
+        "s-summary": "Summary ready",
+      };
+
+      function resetStages() {
+        STAGES.forEach((id) => {
+          const el = document.getElementById(id);
+          el.className = "stage-item";
+          el.querySelector(".stage-sub").textContent = {
+            "s-upload": "Send MP4 to API",
+            "s-whisper": "Speech → text segments",
+            "s-frames": "1 frame every 2 seconds",
+            "s-blip": "Visual description per frame",
+            "s-embed": "FAISS vector index (audio)",
+            "s-vembed": "FAISS vector index (visual)",
+            "s-summary": "Chunked speech summarisation",
+          }[id];
+          const dot = el.querySelector(".stage-dot");
+          dot.innerHTML = dot.innerHTML; // keep original icon
+        });
+      }
+
+      function setStageActive(id) {
+        const el = document.getElementById(id);
+        el.className = "stage-item active";
+        el.querySelector(".stage-sub").textContent = STAGE_SUBS[id];
+        const dot = el.querySelector(".stage-dot");
+        dot.innerHTML = '<div class="spinner"></div>';
+      }
+
+      function setStagesDone(upToIndex) {
+        for (let i = 0; i <= upToIndex; i++) {
+          const el = document.getElementById(STAGES[i]);
+          el.className = "stage-item done";
+          el.querySelector(".stage-sub").textContent = STAGE_DONE[STAGES[i]];
+          el.querySelector(".stage-dot").innerHTML =
+            `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="2,7 5.5,10.5 12,3.5"/></svg>`;
+        }
+      }
+
+      function setStageError(id) {
+        const el = document.getElementById(id);
+        el.className = "stage-item error";
+        el.querySelector(".stage-sub").textContent = "Failed";
+        el.querySelector(".stage-dot").innerHTML =
+          `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>`;
+      }
+
+      /* ── upload + process ── */
+      async function uploadAndProcess() {
+        const base = getBase();
+        if (!base) return;
+        if (!selFile) {
+          toast("Select a video first", true);
+          return;
+        }
+        apiBase = base;
+
+        document.getElementById("process-btn").disabled = true;
+        document.getElementById("process-btn").innerHTML =
+          '<div class="spinner" style="border-color:rgba(255,255,255,.3);border-top-color:#fff"></div> Processing…';
+        document.getElementById("stats-block").style.display = "none";
+        resetStages();
+        switchTab("process", document.querySelectorAll(".tab")[0]);
+
+        /* upload stage */
+        setStageActive("s-upload");
+        const fd = new FormData();
+        fd.append("file", selFile);
+        let resp;
+        try {
+          resp = await fetch(`${base}/upload`, { method: "POST", body: fd });
+          if (!resp.ok) throw new Error(await resp.text());
+          setStagesDone(0);
+        } catch (e) {
+          setStageError("s-upload");
+          toast("Upload failed: " + e.message, true);
+          resetBtn();
+          return;
+        }
+
+        /* simulate the pipeline stages with polling /status until ready */
+        /* We fire stage animations sequentially; actual work is in the server */
+        const stageOrder = [
+          "s-whisper",
+          "s-frames",
+          "s-blip",
+          "s-embed",
+          "s-vembed",
+          "s-summary",
+        ];
+        const stageDurations = [5000, 3000, 8000, 2000, 2000, 4000]; // approx ms
+
+        for (let i = 0; i < stageOrder.length; i++) {
+          setStageActive(stageOrder[i]);
+          await sleep(stageDurations[i]);
+          setStagesDone(i + 1); // +1 because upload is index 0
+        }
+
+        /* verify */
+        try {
+          const r = await fetch(`${base}/status`);
+          const d = await r.json();
+          document.getElementById("stat-segs").textContent =
+            d.segment_count ?? "—";
+          document.getElementById("stat-vis").textContent =
+            d.visual_count ?? "—";
+          document.getElementById("stats-block").style.display = "block";
+          document.getElementById("status-pill").className = "nav-pill ready";
+          document.getElementById("status-text").textContent = "Ready";
+          toast("Pipeline complete — go to Ask tab");
+        } catch (e) {
+          toast("Done but could not verify status");
+        }
+
+        resetBtn();
+
+        const d = await resp.json().catch(() => ({}));
+      }
+
+      function sleep(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+      function resetBtn() {
+        const b = document.getElementById("process-btn");
+        b.disabled = false;
+        b.innerHTML =
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Pipeline';
+      }
+
+      /* ── query ── */
+      function useChip(el) {
+        document.getElementById("q-inp").value = el.textContent;
+        doQuery();
+      }
+
+      async function doQuery() {
+        const base = getBase();
+        if (!base) return;
+        const q = document.getElementById("q-inp").value.trim();
+        if (!q) {
+          toast("Enter a question", true);
+          return;
+        }
+        apiBase = base;
+
+        document.getElementById("answer-area").innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+      <div class="skel" style="width:100%;height:14px"></div>
+      <div class="skel" style="width:80%;height:14px"></div>
+      <div class="skel" style="width:60%;height:14px;margin-bottom:8px"></div>
+      <div class="skel" style="width:100%;height:60px"></div>
+    </div>`;
+
+        try {
+          const r = await fetch(`${base}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: q }),
+          });
+          if (!r.ok)
+            throw new Error(
+              (await r.json().catch(() => ({}))).detail || r.status,
+            );
+          const d = await r.json();
+          renderAnswer(q, d, base);
+        } catch (e) {
+          document.getElementById("answer-area").innerHTML =
+            `<p style="color:var(--rose);font-size:.82rem;padding-top:.5rem">${e.message}</p>`;
+        }
+      }
+
+      function renderAnswer(q, d, base) {
+        clipStart = d.clip.start;
+        clipEnd = d.clip.end;
+
+        /* show clip bar on video */
+        const bar = document.getElementById("clip-bar");
+        document.getElementById("clip-bar-text").textContent =
+          `Clip: ${fmt(clipStart)} – ${fmt(clipEnd)}`;
+        bar.className = "clip-bar show";
+        document.getElementById("clip-jump-btn").onclick = () => {
+          const vid = document.getElementById("main-video");
+          if (vid.src && vid.src !== window.location.href) {
+            vid.currentTime = clipStart;
+            vid.play();
+          } else {
+            window.open(
+              `${base}/clip?start=${clipStart}&end=${clipEnd}`,
+              "_blank",
+            );
+          }
+        };
+
+        const tHits = d.context.text_hits
+          .map(
+            (h) => `
+    <div class="hit-row">
+      <span class="hit-badge audio">Audio</span>
+      <span class="hit-row-text">${h.text}</span>
+      <span class="hit-ts">${fmt(h.start)}</span>
+    </div>`,
+          )
+          .join("");
+        const vHits = d.context.visual_hits
+          .map(
+            (h) => `
+    <div class="hit-row">
+      <span class="hit-badge visual">Visual</span>
+      <span class="hit-row-text">${h.text}</span>
+      <span class="hit-ts">${fmt(h.start)}</span>
+    </div>`,
+          )
+          .join("");
+
+        document.getElementById("answer-area").innerHTML = `
+    <div class="answer-wrap">
+      <div class="answer-box">
+        <div class="answer-label">Answer</div>
+        <div class="answer-text">${d.answer}</div>
+      </div>
+      <div>
+        <div class="hits-title">Retrieved context</div>
+        ${tHits}${vHits}
+      </div>
+    </div>`;
+      }
+
+      /* ── summary ── */
+      async function loadSummary() {
+        const base = getBase();
+        if (!base) return;
+        document.getElementById("summary-text").textContent = "Loading…";
+        try {
+          const r = await fetch(`${base}/summary`);
+          const d = await r.json();
+          document.getElementById("summary-text").textContent =
+            d.summary || "No summary available.";
+        } catch (e) {
+          document.getElementById("summary-text").textContent =
+            "Could not load — check connection.";
+        }
+      }
+
+      /* ── persist URL ── */
+      window.addEventListener("load", () => {
+        const s = localStorage.getItem("vrag_url");
+        if (s) {
+          document.getElementById("api-url").value = s;
+        }
+      });
+      document.getElementById("api-url").addEventListener("input", function () {
+        localStorage.setItem("vrag_url", this.value);
+      });
+    </script>
+  </body>
+</html>

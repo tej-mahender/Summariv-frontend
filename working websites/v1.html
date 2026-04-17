@@ -1,0 +1,2106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SummariV — Video Question Answering</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --ink: #0f0e0c;
+        --ink2: #3a3830;
+        --ink3: #6a6a65;
+        --ink4: #b0ad9f;
+        --paper: #faf9f6;
+        --paper2: #f2f0ea;
+        --paper3: #e4e1d6;
+        --paper4: #ccc9bb;
+        --surface: #ffffff;
+        --blue: #1d4ed8;
+        --blue2: #1e40af;
+        --blue-bg: #eff6ff;
+        --blue-border: #bfdbfe;
+        --green: #166534;
+        --green2: #15803d;
+        --green-bg: #f0fdf4;
+        --green-border: #bbf7d0;
+        --red: #991b1b;
+        --red-bg: #fef2f2;
+        --red-border: #fecaca;
+        --amber: #92400e;
+        --amber-bg: #fffbeb;
+        --amber-border: #fde68a;
+        --purple: #5b21b6;
+        --purple-bg: #f5f3ff;
+        --purple-border: #ddd6fe;
+        --r: 10px;
+        --r2: 14px;
+        --sh: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04);
+        --sh2: 0 4px 16px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      html {
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+
+      /* ── CONFIG BAR ─────────────────────────────────────────────── */
+      .cfg-bar {
+        background: #111;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid #222;
+      }
+
+      .cfg-label {
+        font-size: 12px;
+        color: #666;
+        white-space: nowrap;
+      }
+
+      .cfg-input {
+        flex: 1;
+        min-width: 260px;
+        max-width: 480px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        background: #1a1a1a;
+        color: #e8e5db;
+        font-size: 12px;
+        font-family: "DM Mono", monospace;
+        outline: none;
+      }
+
+      .cfg-input:focus {
+        border-color: #4070e0;
+      }
+
+      .cfg-input::placeholder {
+        color: #555;
+      }
+
+      .cfg-save {
+        padding: 6px 16px;
+        background: #1d4ed8;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: "DM Sans", sans-serif;
+      }
+
+      .cfg-save:hover {
+        background: #1e40af;
+      }
+
+      .cfg-status {
+        font-size: 11px;
+        color: #555;
+        margin-left: 4px;
+      }
+
+      .cfg-status.ok {
+        color: #22c55e;
+      }
+
+      .cfg-status.err {
+        color: #ef4444;
+      }
+
+      /* ── APP LAYOUT ─────────────────────────────────────────────── */
+      .app {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        grid-template-rows: 52px 1fr;
+        min-height: calc(100vh - 46px);
+      }
+
+      /* ── TOPBAR ─────────────────────────────────────────────────── */
+      .topbar {
+        grid-column: 1/-1;
+        background: var(--surface);
+        border-bottom: 1px solid var(--paper3);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        position: sticky;
+        top: 46px;
+        z-index: 50;
+        box-shadow: var(--sh);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-family: "Fraunces", serif;
+        font-size: 19px;
+        font-weight: 400;
+        color: var(--ink);
+      }
+
+      .brand-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+
+      .topnav {
+        display: flex;
+        gap: 2px;
+      }
+
+      .tnav-a {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink3);
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        font-family: "DM Sans", sans-serif;
+      }
+
+      .tnav-a:hover,
+      .tnav-a.active {
+        background: var(--paper2);
+        color: var(--ink);
+      }
+
+      .tnav-a.active {
+        font-weight: 600;
+      }
+
+      .top-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .conn-dot {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--paper2);
+        color: var(--ink4);
+      }
+
+      .conn-dot.connected {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+
+      .conn-dot.error {
+        background: var(--red-bg);
+        color: var(--red);
+      }
+
+      .cdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      /* ── SIDEBAR ─────────────────────────────────────────────────── */
+      .sidebar {
+        background: var(--surface);
+        border-right: 1px solid var(--paper3);
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        overflow-y: auto;
+      }
+
+      .sb-section {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--ink4);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 12px 10px 5px;
+      }
+
+      .sb-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 7px 10px;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink3);
+        cursor: pointer;
+        transition: all 0.12s;
+        border: none;
+        background: transparent;
+        font-family: "DM Sans", sans-serif;
+        width: 100%;
+        text-align: left;
+      }
+
+      .sb-item:hover {
+        background: var(--paper2);
+        color: var(--ink);
+      }
+
+      .sb-item.active {
+        background: var(--blue-bg);
+        color: var(--blue);
+        font-weight: 600;
+      }
+
+      .sb-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        background: var(--paper2);
+        flex-shrink: 0;
+      }
+
+      .sb-item.active .sb-icon {
+        background: var(--blue-bg);
+      }
+
+      /* ── MAIN ─────────────────────────────────────────────────────── */
+      .main {
+        padding: 28px 32px;
+        overflow-y: auto;
+        background: var(--paper);
+      }
+
+      .pg-head {
+        margin-bottom: 24px;
+      }
+
+      .pg-title {
+        font-family: "Fraunces", serif;
+        font-size: 24px;
+        font-weight: 300;
+        color: var(--ink);
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+      }
+
+      .pg-sub {
+        font-size: 13px;
+        color: var(--ink3);
+        line-height: 1.5;
+      }
+
+      /* Pipeline tracker */
+      .pipeline {
+        display: flex;
+        align-items: center;
+        background: var(--surface);
+        border: 1px solid var(--paper3);
+        border-radius: var(--r2);
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        gap: 0;
+        box-shadow: var(--sh);
+        overflow-x: auto;
+      }
+
+      .pip {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        min-width: 72px;
+        position: relative;
+      }
+
+      .pip + .pip::before {
+        content: "";
+        position: absolute;
+        left: -20px;
+        top: 15px;
+        width: 40px;
+        height: 1.5px;
+        background: var(--paper3);
+      }
+
+      .pip.done + .pip::before {
+        background: var(--green2);
+      }
+
+      .pc {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        border: 2px solid var(--paper3);
+        background: var(--paper);
+        color: var(--ink4);
+        transition: all 0.3s;
+      }
+
+      .pc.done {
+        background: var(--green-bg);
+        border-color: var(--green2);
+        color: var(--green);
+      }
+
+      .pc.active {
+        background: var(--blue-bg);
+        border-color: var(--blue);
+        color: var(--blue);
+        animation: ppulse 1.2s ease-in-out infinite;
+      }
+
+      @keyframes ppulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+        }
+
+        50% {
+          box-shadow: 0 0 0 6px rgba(29, 78, 216, 0.04);
+        }
+      }
+
+      .pl {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--ink4);
+        text-align: center;
+      }
+
+      .pl.done {
+        color: var(--green);
+      }
+
+      .pl.active {
+        color: var(--blue);
+      }
+
+      /* Cards */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--paper3);
+        border-radius: var(--r2);
+        box-shadow: var(--sh);
+        margin-bottom: 18px;
+        overflow: hidden;
+      }
+
+      .card-head {
+        padding: 14px 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ink3);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .step-num {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--blue);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .step-num.done {
+        background: var(--green2);
+      }
+
+      .card-body {
+        padding: 16px 20px 20px;
+      }
+
+      /* Upload zone */
+      .drop-zone {
+        border: 2px dashed var(--paper4);
+        border-radius: var(--r);
+        padding: 36px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--paper);
+        position: relative;
+      }
+
+      .drop-zone:hover {
+        border-color: var(--blue);
+        background: var(--blue-bg);
+      }
+
+      .drop-zone.drag {
+        border-color: var(--blue);
+        background: var(--blue-bg);
+      }
+
+      .drop-zone.chosen {
+        border: 2px solid var(--green2);
+        border-style: solid;
+        background: var(--green-bg);
+      }
+
+      .dz-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+
+      .dz-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 5px;
+      }
+
+      .dz-sub {
+        font-size: 13px;
+        color: var(--ink3);
+      }
+
+      .dz-formats {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+
+      .fmt {
+        padding: 2px 9px;
+        border-radius: 20px;
+        background: var(--paper2);
+        border: 1px solid var(--paper3);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ink3);
+        font-family: "DM Mono", monospace;
+      }
+
+      .file-chosen-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 14px;
+        padding: 11px 14px;
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: var(--r);
+        border: 1px solid var(--paper3);
+        text-align: left;
+      }
+
+      .fc-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #dbeafe, #c7d2fe);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+      }
+
+      .fc-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      .fc-meta {
+        font-size: 11px;
+        color: var(--ink3);
+        margin-top: 2px;
+      }
+
+      .fc-check {
+        margin-left: auto;
+        color: var(--green2);
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      #file-input {
+        display: none;
+      }
+
+      /* Progress */
+      .prog-wrap {
+        margin-top: 16px;
+      }
+
+      .prog-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .prog-msg {
+        font-size: 12px;
+        color: var(--ink3);
+      }
+
+      .prog-pct {
+        font-size: 12px;
+        font-weight: 700;
+        font-family: "DM Mono", monospace;
+        color: var(--blue);
+      }
+
+      .prog-track {
+        height: 5px;
+        background: var(--paper3);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+
+      .prog-fill {
+        height: 100%;
+        border-radius: 3px;
+        width: 0%;
+        transition:
+          width 0.5s ease,
+          background 0.4s;
+      }
+
+      .proc-log {
+        background: #0d1117;
+        border-radius: var(--r);
+        padding: 10px 14px;
+        font-family: "DM Mono", monospace;
+        font-size: 11px;
+        line-height: 1.9;
+        max-height: 90px;
+        overflow: hidden;
+      }
+
+      .ll {
+        color: #484f58;
+      }
+
+      .ll.g {
+        color: #3fb950;
+      }
+
+      .ll.b {
+        color: #58a6ff;
+      }
+
+      .ll.y {
+        color: #d29922;
+      }
+
+      .ts {
+        color: #30363d;
+        margin-right: 8px;
+      }
+
+      /* Summary */
+      .summary-box {
+        margin-top: 14px;
+        padding: 14px 16px;
+        background: var(--paper);
+        border: 1px solid var(--paper3);
+        border-radius: var(--r);
+        font-size: 13px;
+        line-height: 1.8;
+        color: var(--ink2);
+      }
+
+      .summary-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 9px;
+        border-radius: 10px;
+        background: var(--blue-bg);
+        color: var(--blue);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 9px;
+      }
+
+      /* Stats */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .stat {
+        background: var(--surface);
+        border: 1px solid var(--paper3);
+        border-radius: var(--r);
+        padding: 12px 14px;
+        box-shadow: var(--sh);
+      }
+
+      .stat-v {
+        font-size: 22px;
+        font-weight: 600;
+        font-family: "DM Mono", monospace;
+        color: var(--ink);
+      }
+
+      .stat-l {
+        font-size: 11px;
+        color: var(--ink4);
+        margin-top: 2px;
+        font-weight: 500;
+      }
+
+      /* Query */
+      .qbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--paper);
+        border: 1.5px solid var(--paper3);
+        border-radius: var(--r);
+        padding: 4px 4px 4px 14px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .qbox:focus-within,
+      .qbox.filled {
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.08);
+      }
+
+      .qi {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        color: var(--ink);
+        outline: none;
+        font-family: "DM Sans", sans-serif;
+        padding: 8px 0;
+      }
+
+      .qi::placeholder {
+        color: var(--ink4);
+      }
+
+      .qi:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .ask-btn {
+        padding: 8px 18px;
+        background: var(--blue);
+        color: #fff;
+        border: none;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        font-family: "DM Sans", sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .ask-btn:hover {
+        background: var(--blue2);
+      }
+
+      .ask-btn:disabled {
+        background: var(--paper3);
+        color: var(--ink4);
+        cursor: default;
+      }
+
+      .q-hint {
+        font-size: 12px;
+        color: var(--ink4);
+        margin-top: 8px;
+      }
+
+      .examples {
+        display: flex;
+        gap: 7px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+
+      .eg {
+        padding: 4px 11px;
+        border-radius: 20px;
+        background: var(--paper2);
+        border: 1px solid var(--paper3);
+        font-size: 12px;
+        color: var(--ink3);
+        cursor: pointer;
+        transition: all 0.12s;
+      }
+
+      .eg:hover {
+        background: var(--blue-bg);
+        border-color: var(--blue-border);
+        color: var(--blue);
+      }
+
+      /* Answer */
+      .answer-card {
+        border-color: var(--blue-border);
+      }
+
+      .ans-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .ans-badges {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .badge.green {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+
+      .badge.blue {
+        background: var(--blue-bg);
+        color: var(--blue);
+      }
+
+      .badge.purple {
+        background: var(--purple-bg);
+        color: var(--purple);
+      }
+
+      .ans-block {
+        background: var(--blue-bg);
+        border-left: 3px solid var(--blue);
+        border-radius: 0 var(--r) var(--r) 0;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+      }
+
+      .ans-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--blue);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .ans-text {
+        font-size: 15px;
+        line-height: 1.75;
+        color: var(--ink);
+      }
+
+      /* Metric cards */
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .mc {
+        background: var(--paper);
+        border: 1px solid var(--paper3);
+        border-radius: var(--r);
+        padding: 12px 14px;
+      }
+
+      .mc-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--ink4);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+
+      .mc-val {
+        font-size: 21px;
+        font-weight: 600;
+        font-family: "DM Mono", monospace;
+      }
+
+      .mc-val.high {
+        color: var(--green);
+      }
+
+      .mc-val.med {
+        color: var(--amber);
+      }
+
+      .mc-bar {
+        height: 3px;
+        background: var(--paper3);
+        border-radius: 2px;
+        margin-top: 6px;
+      }
+
+      .mc-fill {
+        height: 100%;
+        border-radius: 2px;
+      }
+
+      .mc-fill.green {
+        background: var(--green2);
+      }
+
+      .mc-fill.amber {
+        background: #d97706;
+      }
+
+      /* Evidence */
+      .ev-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .ev {
+        background: var(--paper);
+        border: 1px solid var(--paper3);
+        border-radius: var(--r);
+        padding: 12px 14px;
+      }
+
+      .ev-mod {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .ev-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+      }
+
+      .ev-mod.audio {
+        color: var(--blue);
+      }
+
+      .ev-mod.audio .ev-dot {
+        background: var(--blue);
+      }
+
+      .ev-mod.visual {
+        color: var(--purple);
+      }
+
+      .ev-mod.visual .ev-dot {
+        background: var(--purple);
+      }
+
+      .ev-q {
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--ink2);
+        border-left: 2px solid var(--paper3);
+        padding-left: 9px;
+        margin-bottom: 7px;
+        font-style: italic;
+      }
+
+      .ev-meta {
+        font-size: 11px;
+        color: var(--ink4);
+        font-family: "DM Mono", monospace;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .ev-sc {
+        padding: 1px 7px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-style: normal;
+        font-family: "DM Sans", monospace;
+        background: var(--green-bg);
+        color: var(--green);
+      }
+
+      .ev-sc.purple {
+        background: var(--purple-bg);
+        color: var(--purple);
+      }
+
+      /* Clip */
+      .clip-wrap {
+        border-radius: var(--r);
+        overflow: hidden;
+      }
+
+      .clip-screen {
+        aspect-ratio: 16/9;
+        background: #0d1117;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .clip-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+
+      .clip-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 3px 9px;
+        border-radius: 6px;
+        background: rgba(29, 78, 216, 0.75);
+        backdrop-filter: blur(6px);
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+        font-family: "DM Mono", monospace;
+      }
+
+      .clip-center {
+        text-align: center;
+        color: #fff;
+        position: relative;
+        z-index: 1;
+      }
+
+      .play-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .play-btn:hover {
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      .play-tri {
+        width: 0;
+        height: 0;
+        border-top: 9px solid transparent;
+        border-bottom: 9px solid transparent;
+        border-left: 15px solid rgba(255, 255, 255, 0.85);
+        margin-left: 3px;
+      }
+
+      .clip-name {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.55);
+      }
+
+      .clip-ts {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        font-family: "DM Mono", monospace;
+        margin-top: 4px;
+      }
+
+      .clip-ctrls {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .cc-btn {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .cc-prog {
+        flex: 1;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 2px;
+      }
+
+      .cc-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 2px;
+        background: var(--blue);
+        transition: width 0.3s;
+      }
+
+      .cc-time {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.35);
+        font-family: "DM Mono", monospace;
+      }
+
+      /* Error / info banners */
+      .banner {
+        padding: 10px 14px;
+        border-radius: var(--r);
+        font-size: 13px;
+        margin-bottom: 12px;
+        display: none;
+        border: 1px solid;
+      }
+
+      .banner.error {
+        background: var(--red-bg);
+        color: var(--red);
+        border-color: var(--red-border);
+      }
+
+      .banner.info {
+        background: var(--amber-bg);
+        color: var(--amber);
+        border-color: var(--amber-border);
+      }
+
+      .banner.show {
+        display: block;
+      }
+
+      /* Thinking spinner */
+      .spin {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        animation: spin 0.7s linear infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .divider {
+        border: none;
+        border-top: 1px solid var(--paper3);
+        margin: 14px 0;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ── API URL CONFIG BAR ─────────────────────────────────────────── -->
+    <div class="cfg-bar">
+      <span class="cfg-label">🔗 Backend URL:</span>
+      <input
+        class="cfg-input"
+        id="api-input"
+        type="text"
+        placeholder="Paste your ngrok URL here — e.g. https://xxxx.ngrok-free.app"
+        value=""
+      />
+      <button class="cfg-save" onclick="saveUrl()">Connect</button>
+      <span class="cfg-status" id="cfg-status">Not connected</span>
+    </div>
+
+    <!-- ── APP SHELL ─────────────────────────────────────────────────── -->
+    <div class="app">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 20px">
+          <div class="brand">
+            <div class="brand-icon">🎓</div>
+            SummariV
+          </div>
+        </div>
+        <div class="top-right">
+          <div class="conn-dot" id="conn-indicator">
+            <div class="cdot"></div>
+            <span id="conn-text">Disconnected</span>
+          </div>
+          <div class="avatar">TK</div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sb-section">Workspace</div>
+        <button class="sb-item active">
+          <div class="sb-icon">📹</div>
+          Video Q&A
+        </button>
+        <button class="sb-item">
+          <div class="sb-icon">📊</div>
+          Evaluation
+        </button>
+        <button class="sb-item">
+          <div class="sb-icon">📂</div>
+          My Videos
+        </button>
+        <div class="sb-section">Models</div>
+        <button class="sb-item">
+          <div class="sb-icon">🎙</div>
+          Whisper ASR
+        </button>
+        <button class="sb-item">
+          <div class="sb-icon">🖼</div>
+          BLIP Vision
+        </button>
+        <button class="sb-item">
+          <div class="sb-icon">🔢</div>
+          SBERT Embed
+        </button>
+        <button class="sb-item">
+          <div class="sb-icon">⚡</div>
+          Flan-T5 Gen
+        </button>
+        <div class="sb-section">Data</div>
+        <button class="sb-item">
+          <div class="sb-icon">🎓</div>
+          EDU-VSUM
+        </button>
+      </div>
+
+      <!-- Main content -->
+      <div class="main">
+        <div class="pg-head">
+          <div class="pg-title">Video Question Answering</div>
+          <div class="pg-sub">
+            Upload an educational video · Process through multimodal RAG
+            pipeline · Ask natural language questions
+          </div>
+        </div>
+
+        <!-- Error banner -->
+        <div class="banner error" id="err-banner"></div>
+        <div class="banner info" id="info-banner"></div>
+
+        <!-- Stats (visible after processing) -->
+        <div class="stats-row hidden" id="stats-row">
+          <div class="stat">
+            <div class="stat-v" id="st-segs">—</div>
+            <div class="stat-l">Audio segments</div>
+          </div>
+          <div class="stat">
+            <div class="stat-v" id="st-frames">—</div>
+            <div class="stat-l">Frames captioned</div>
+          </div>
+          <div class="stat">
+            <div class="stat-v" id="st-dim">384</div>
+            <div class="stat-l">Embedding dims</div>
+          </div>
+          <div class="stat">
+            <div class="stat-v" id="st-model">Flan-T5</div>
+            <div class="stat-l">Answer model</div>
+          </div>
+        </div>
+
+        <!-- Pipeline tracker -->
+        <div class="pipeline" id="pipeline">
+          <div class="pip" id="pip1">
+            <div class="pc" id="pc1">1</div>
+            <div class="pl" id="pl1">Transcribe</div>
+          </div>
+          <div class="pip" id="pip2">
+            <div class="pc" id="pc2">2</div>
+            <div class="pl" id="pl2">Frames</div>
+          </div>
+          <div class="pip" id="pip3">
+            <div class="pc" id="pc3">3</div>
+            <div class="pl" id="pl3">Caption</div>
+          </div>
+          <div class="pip" id="pip4">
+            <div class="pc" id="pc4">4</div>
+            <div class="pl" id="pl4">Embed</div>
+          </div>
+          <div class="pip" id="pip5">
+            <div class="pc" id="pc5">5</div>
+            <div class="pl" id="pl5">Index</div>
+          </div>
+        </div>
+
+        <!-- Upload card -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="step-num" id="snum1">1</div>
+              Upload Video
+            </div>
+            <div class="badge green hidden" id="upload-done-badge">
+              ✓ Indexed
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Drop zone empty -->
+            <div
+              class="drop-zone"
+              id="dz"
+              onclick="document.getElementById('file-input').click()"
+            >
+              <div class="dz-icon" id="dz-icon">🎬</div>
+              <div class="dz-title" id="dz-title">
+                Drop your video here, or click to browse
+              </div>
+              <div class="dz-sub" id="dz-sub">
+                Supports educational lecture recordings and tutorials
+              </div>
+              <div class="dz-formats" id="dz-formats">
+                <span class="fmt">.mp4</span>
+                <span class="fmt">.mov</span>
+                <span class="fmt">.avi</span>
+                <span class="fmt">≤500 MB</span>
+              </div>
+              <div class="file-chosen-box hidden" id="fc-box">
+                <div class="fc-icon">🎓</div>
+                <div>
+                  <div class="fc-name" id="fc-name"></div>
+                  <div class="fc-meta" id="fc-meta"></div>
+                </div>
+                <div class="fc-check">✓</div>
+              </div>
+            </div>
+            <input
+              type="file"
+              id="file-input"
+              accept="video/*"
+              onchange="onFileChosen(this.files[0])"
+            />
+
+            <!-- Process button -->
+            <div
+              style="
+                margin-top: 12px;
+                display: flex;
+                gap: 10px;
+                align-items: center;
+              "
+            >
+              <button
+                class="ask-btn"
+                id="process-btn"
+                onclick="processVideo()"
+                disabled
+                style="background: var(--green2)"
+              >
+                ▶ &nbsp;Process Video
+              </button>
+              <span
+                style="font-size: 12px; color: var(--ink4)"
+                id="process-hint"
+                >Select a video to begin</span
+              >
+            </div>
+
+            <!-- Progress -->
+            <div class="prog-wrap hidden" id="prog-wrap">
+              <div class="prog-row">
+                <div class="prog-msg" id="prog-msg">Initialising…</div>
+                <div class="prog-pct" id="prog-pct">0%</div>
+              </div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  id="prog-fill"
+                  style="background: var(--blue)"
+                ></div>
+              </div>
+              <div class="proc-log" id="proc-log">
+                <div class="ll">
+                  <span class="ts">[00:00]</span> Waiting for video upload...
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="hidden" id="summary-block" style="margin-top: 14px">
+              <div class="divider" style="margin-top: 0"></div>
+              <div class="summary-label">📋 Auto-generated Summary</div>
+              <div class="summary-box" id="summary-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Query card -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="step-num" id="snum2">2</div>
+              Ask a Question
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="qbox" id="qbox">
+              <input
+                class="qi"
+                id="qi"
+                type="text"
+                placeholder="e.g.  What is gradient descent and how does it work?"
+                disabled
+                onkeydown="if (event.key === 'Enter') askQuestion();"
+              />
+              <button
+                class="ask-btn"
+                id="ask-btn"
+                onclick="askQuestion()"
+                disabled
+              >
+                <span id="ask-inner">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                  Ask
+                </span>
+              </button>
+            </div>
+            <div class="q-hint" id="q-hint">
+              Upload and process a video to enable querying.
+            </div>
+            <div class="examples hidden" id="examples">
+              <span class="eg" onclick="setQ(this)"
+                >What is gradient descent?</span
+              >
+              <span class="eg" onclick="setQ(this)"
+                >Explain the bias-variance tradeoff</span
+              >
+              <span class="eg" onclick="setQ(this)"
+                >How does backpropagation work?</span
+              >
+              <span class="eg" onclick="setQ(this)"
+                >What optimiser performs best?</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Answer card (hidden until answer arrives) -->
+        <div class="card answer-card hidden" id="answer-card">
+          <div class="card-head" style="padding-bottom: 14px">
+            <div class="ans-head">
+              <div
+                class="card-title"
+                style="
+                  text-transform: none;
+                  letter-spacing: 0;
+                  font-size: 14px;
+                  font-weight: 600;
+                "
+              >
+                Generated Answer
+              </div>
+              <div class="ans-badges">
+                <span class="badge green">Evidence Grounded</span>
+                <span class="badge blue">Multimodal RAG</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body" style="padding-top: 0">
+            <div class="ans-block" id="ans-block">
+              <div class="ans-label" id="ans-label">Answer</div>
+              <div class="ans-text" id="ans-text"></div>
+            </div>
+
+            <div class="metrics">
+              <div class="mc">
+                <div class="mc-label">Answer Relevance</div>
+                <div class="mc-val high" id="mc-ar">—</div>
+                <div class="mc-bar">
+                  <div
+                    class="mc-fill green"
+                    id="mc-ar-bar"
+                    style="width: 0%"
+                  ></div>
+                </div>
+              </div>
+              <div class="mc">
+                <div class="mc-label">Evidence Grounding</div>
+                <div class="mc-val high" id="mc-egs">—</div>
+                <div class="mc-bar">
+                  <div
+                    class="mc-fill green"
+                    id="mc-egs-bar"
+                    style="width: 0%"
+                  ></div>
+                </div>
+              </div>
+              <div class="mc">
+                <div class="mc-label">Clip Window</div>
+                <div
+                  class="mc-val"
+                  id="mc-clip"
+                  style="font-size: 14px; padding-top: 4px; color: var(--blue)"
+                >
+                  —
+                </div>
+              </div>
+            </div>
+
+            <div class="divider" id="ev-divider"></div>
+
+            <div id="ev-section">
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  color: var(--ink4);
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  margin-bottom: 10px;
+                "
+              >
+                Retrieved Evidence
+              </div>
+              <div class="ev-grid">
+                <div class="ev">
+                  <div class="ev-mod audio">
+                    <div class="ev-dot"></div>
+                    Audio · Whisper ASR
+                  </div>
+                  <div class="ev-q" id="ev-audio-text">—</div>
+                  <div class="ev-meta">
+                    ⏱ <span id="ev-audio-time">—</span>
+                    <span class="ev-sc" id="ev-audio-sc">—</span>
+                  </div>
+                </div>
+                <div class="ev">
+                  <div class="ev-mod visual">
+                    <div class="ev-dot"></div>
+                    Visual · BLIP Caption
+                  </div>
+                  <div class="ev-q" id="ev-vis-text">—</div>
+                  <div class="ev-meta">
+                    ⏱ <span id="ev-vis-time">—</span>
+                    <span class="ev-sc purple" id="ev-vis-sc">BLIP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /ev-section -->
+
+            <div class="divider" id="clip-divider"></div>
+
+            <div id="clip-section">
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  color: var(--ink4);
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  margin-bottom: 10px;
+                "
+              >
+                Evidence Clip
+              </div>
+              <div class="clip-wrap" id="clip-wrap">
+                <!-- Real video element -->
+                <video
+                  id="clip-video"
+                  controls
+                  style="
+                    width: 100%;
+                    border-radius: var(--r);
+                    display: none;
+                    background: #000;
+                  "
+                  preload="auto"
+                >
+                  Your browser does not support video.
+                </video>
+                <!-- Placeholder shown before clip loads -->
+                <div class="clip-screen" id="clip-placeholder">
+                  <div class="clip-grid"></div>
+                  <div class="clip-overlay" id="clip-overlay-ts">—</div>
+                  <div class="clip-center">
+                    <div class="play-btn">
+                      <div class="play-tri"></div>
+                    </div>
+                    <div class="clip-name" id="clip-fname">—</div>
+                    <div class="clip-ts" id="clip-ts">
+                      Clip will appear here after querying
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /clip-wrap -->
+            </div>
+            <!-- /clip-section -->
+          </div>
+        </div>
+      </div>
+      <!-- /main -->
+    </div>
+    <!-- /app -->
+
+    <script>
+      // ── State ────────────────────────────────────────────────────
+      let API_URL = "";
+      let selectedFile = null;
+      let videoReady = false;
+      let uploadedFilename = "";
+
+      // ── Helpers ──────────────────────────────────────────────────
+      const $ = (id) => document.getElementById(id);
+
+      function showBanner(type, msg) {
+        const el = $(type === "error" ? "err-banner" : "info-banner");
+        el.textContent = msg;
+        el.classList.add("show");
+        setTimeout(() => el.classList.remove("show"), 6000);
+      }
+      function hideBanners() {
+        $("err-banner").classList.remove("show");
+        $("info-banner").classList.remove("show");
+      }
+
+      function setPip(n, state) {
+        const c = $("pc" + n),
+          l = $("pl" + n);
+        c.className = "pc" + (state ? " " + state : "");
+        l.className = "pl" + (state ? " " + state : "");
+        c.textContent = state === "done" ? "✓" : String(n);
+      }
+
+      function setLog(lines) {
+        $("proc-log").innerHTML = lines
+          .map(
+            ([cls, ts, msg]) =>
+              `<div class="ll ${cls}"><span class="ts">${ts}</span>${msg}</div>`,
+          )
+          .join("");
+      }
+
+      function fmtBytes(b) {
+        if (b < 1e6) return (b / 1e3).toFixed(0) + " KB";
+        return (b / 1e6).toFixed(1) + " MB";
+      }
+
+      function setQ(el) {
+        $("qi").value = el.textContent;
+        $("qbox").classList.add("filled");
+        $("ask-btn").disabled = false;
+      }
+
+      // ── Shared fetch wrapper — adds ngrok bypass header to every request ─────
+      // Without this header, ngrok shows an interstitial HTML page instead of
+      // forwarding the request, causing CORS errors and ERR_FAILED.
+      function apiFetch(url, options = {}) {
+        return fetch(url, {
+          ...options,
+          headers: {
+            "ngrok-skip-browser-warning": "1", // bypass ngrok interstitial
+            ...(options.headers || {}),
+          },
+        });
+      }
+
+      // ── API URL config ───────────────────────────────────────────
+      async function saveUrl() {
+        let url = $("api-input").value.trim().replace(/\/$/, "");
+        if (!url) {
+          $("cfg-status").textContent = "Enter a URL first";
+          $("cfg-status").className = "cfg-status err";
+          return;
+        }
+        API_URL = url;
+        $("cfg-status").textContent = "Checking…";
+        $("cfg-status").className = "cfg-status";
+        try {
+          const res = await apiFetch(API_URL + "/", {
+            signal: AbortSignal.timeout(6000),
+          });
+          const data = await res.json();
+          $("cfg-status").textContent = "✓ Connected · Device: " + data.device;
+          $("cfg-status").className = "cfg-status ok";
+          $("conn-indicator").className = "conn-dot connected";
+          $("conn-text").textContent = "Connected";
+          if (data.video_ready) {
+            showBanner(
+              "info",
+              "A video is already processed in this session. You can query directly.",
+            );
+            enableQuery();
+          }
+        } catch (e) {
+          $("cfg-status").textContent =
+            "✗ Cannot reach server — is Colab running?";
+          $("cfg-status").className = "cfg-status err";
+          $("conn-indicator").className = "conn-dot error";
+          $("conn-text").textContent = "Error";
+        }
+      }
+
+      // ── File selection ───────────────────────────────────────────
+      const dz = $("dz");
+      dz.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dz.classList.add("drag");
+      });
+      dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
+      dz.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dz.classList.remove("drag");
+        const f = e.dataTransfer.files[0];
+        if (f) onFileChosen(f);
+      });
+
+      function onFileChosen(file) {
+        if (!file) return;
+        selectedFile = file;
+        uploadedFilename = file.name;
+
+        // Update drop zone to show file
+        dz.classList.add("chosen");
+        $("dz-icon").textContent = "✅";
+        $("dz-title").style.color = "var(--green)";
+        $("dz-title").textContent = "Video ready";
+        $("dz-sub").textContent = "";
+        $("dz-formats").classList.add("hidden");
+        $("fc-box").classList.remove("hidden");
+        $("fc-name").textContent = file.name;
+        $("fc-meta").textContent =
+          fmtBytes(file.size) + "  ·  " + (file.type || "video");
+
+        $("process-btn").disabled = !API_URL;
+        $("process-hint").textContent = API_URL
+          ? "Click to start processing"
+          : "Connect to backend first";
+      }
+
+      // ── Upload + Process ─────────────────────────────────────────
+      async function processVideo() {
+        if (!selectedFile) {
+          showBanner("error", "Select a video file first.");
+          return;
+        }
+        if (!API_URL) {
+          showBanner("error", "Set the backend URL first.");
+          return;
+        }
+
+        hideBanners();
+        $("process-btn").disabled = true;
+        $("prog-wrap").classList.remove("hidden");
+        videoReady = false;
+        $("answer-card").classList.add("hidden");
+        $("stats-row").classList.add("hidden");
+        $("summary-block").classList.add("hidden");
+        $("upload-done-badge").classList.add("hidden");
+
+        // Animate pipeline steps with fake timing while backend works
+        const steps = [
+          [
+            1,
+            15,
+            "active",
+            "Transcribing audio with Whisper…",
+            [
+              ["b", "[00:03]", "Loading Whisper base model…"],
+              ["g", "[00:08]", "✓ Model loaded on GPU"],
+              ["y", "[00:09]", "⟳ Transcribing segments…"],
+            ],
+          ],
+          [
+            2,
+            35,
+            "active",
+            "Extracting video frames (1 per 2s)…",
+            [
+              ["g", "[00:42]", "✓ Transcription done"],
+              ["b", "[00:43]", "→ Opening VideoCapture…"],
+              ["y", "[00:45]", "⟳ Extracting frames…"],
+            ],
+          ],
+          [
+            3,
+            58,
+            "active",
+            "Generating visual captions with BLIP…",
+            [
+              ["g", "[01:02]", "✓ Frames extracted"],
+              ["b", "[01:03]", "→ Loading BLIP model…"],
+              ["y", "[01:08]", "⟳ Captioning frames…"],
+            ],
+          ],
+          [
+            4,
+            78,
+            "active",
+            "Building FAISS embedding indexes…",
+            [
+              ["g", "[01:45]", "✓ Captions generated"],
+              ["b", "[01:46]", "→ Encoding with SBERT…"],
+              ["y", "[01:48]", "⟳ Indexing vectors…"],
+            ],
+          ],
+          [
+            5,
+            92,
+            "active",
+            "Generating video summary…",
+            [
+              ["g", "[01:58]", "✓ FAISS index built"],
+              ["b", "[01:59]", "→ Summarising lecture…"],
+              ["y", "[02:01]", "⟳ Chunking transcript…"],
+            ],
+          ],
+        ];
+
+        let stepIdx = 0;
+        function advanceStep() {
+          if (stepIdx >= steps.length) return;
+          const [n, pct, st, msg, logs] = steps[stepIdx];
+          // Mark prev as done
+          if (stepIdx > 0) {
+            const prev = steps[stepIdx - 1][0];
+            setPip(prev, "done");
+          }
+          setPip(n, st);
+          $("prog-fill").style.width = pct + "%";
+          $("prog-msg").textContent = msg;
+          $("prog-pct").textContent = pct + "%";
+          setLog(logs);
+          stepIdx++;
+        }
+        advanceStep();
+        const timer = setInterval(advanceStep, 18000); // every 18s for a ~90s total video
+
+        // Actual upload
+        const form = new FormData();
+        form.append("video", selectedFile);
+
+        try {
+          const res = await apiFetch(API_URL + "/upload", {
+            method: "POST",
+            body: form,
+          });
+          clearInterval(timer);
+
+          if (!res.ok) {
+            const t = await res.text();
+            throw new Error(t);
+          }
+          const data = await res.json();
+
+          // All steps done
+          for (let i = 1; i <= 5; i++) setPip(i, "done");
+          $("prog-fill").style.width = "100%";
+          $("prog-fill").style.background = "var(--green2)";
+          $("prog-msg").textContent = "✓ Pipeline complete";
+          $("prog-pct").textContent = "100%";
+          $("prog-pct").style.color = "var(--green)";
+          setLog([
+            [
+              "g",
+              "[02:18]",
+              "✓ FAISS text index ready — " + data.segments + " vectors",
+            ],
+            [
+              "g",
+              "[02:19]",
+              "✓ FAISS visual index ready — " + data.frames + " vectors",
+            ],
+            ["g", "[02:20]", "✓ Summary generated"],
+            ["g", "[02:20]", "✓ Server ready for queries"],
+          ]);
+
+          // Stats
+          $("st-segs").textContent = data.segments;
+          $("st-frames").textContent = data.frames;
+          $("stats-row").classList.remove("hidden");
+
+          // Summary
+          if (data.summary) {
+            $("summary-text").textContent = data.summary;
+            $("summary-block").classList.remove("hidden");
+          }
+
+          // Step badges
+          $("snum1").textContent = "✓";
+          $("snum1").className = "step-num done";
+          $("upload-done-badge").classList.remove("hidden");
+
+          enableQuery();
+          videoReady = true;
+        } catch (e) {
+          clearInterval(timer);
+          $("prog-fill").style.background = "var(--red)";
+          $("prog-msg").textContent = "Error: " + e.message;
+          showBanner("error", "Processing failed: " + e.message);
+          $("process-btn").disabled = false;
+        }
+      }
+
+      function enableQuery() {
+        $("qi").disabled = false;
+        $("ask-btn").disabled = false;
+        $("q-hint").textContent = "Type a question or pick a suggestion below.";
+        $("examples").classList.remove("hidden");
+        $("snum2").textContent = "2";
+        $("snum2").className = "step-num";
+      }
+
+      // ── Query ────────────────────────────────────────────────────
+      async function askQuestion() {
+        const q = $("qi").value.trim();
+        if (!q) {
+          showBanner("error", "Type a question first.");
+          return;
+        }
+        if (!API_URL) {
+          showBanner("error", "Connect to backend first.");
+          return;
+        }
+
+        hideBanners();
+        $("ask-btn").disabled = true;
+        $("ask-inner").innerHTML = '<div class="spin"></div> &nbsp;Searching…';
+        $("answer-card").classList.add("hidden");
+
+        try {
+          const res = await apiFetch(API_URL + "/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: q }),
+          });
+          if (!res.ok) {
+            const t = await res.text();
+            throw new Error(t);
+          }
+          const d = await res.json();
+
+          // ── UNRELATED QUERY — show clean rejection card ──────────
+          if (d.unrelated) {
+            // Style answer block as a warning, not a result
+            const ansBlock = $("ans-block");
+            ansBlock.style.background = "var(--amber-bg)";
+            ansBlock.style.borderColor = "#d97706";
+            $("ans-label").style.color = "var(--amber)";
+            $("ans-label").textContent = "⚠  Out of scope";
+            $("ans-text").textContent = d.answer;
+
+            // Zero out metrics
+            $("mc-ar").textContent = "—";
+            $("mc-egs").textContent = "—";
+            $("mc-ar-bar").style.width = "0%";
+            $("mc-egs-bar").style.width = "0%";
+            $("mc-clip").textContent = "No clip";
+
+            // Hide evidence + clip sections for unrelated queries
+            $("ev-section").style.display = "none";
+            $("clip-section").style.display = "none";
+            $("ev-divider").style.display = "none";
+            $("clip-divider").style.display = "none";
+
+            // Hide step badge change — not a completed answer
+            $("snum2").textContent = "2";
+            $("snum2").className = "step-num";
+
+            $("answer-card").classList.remove("hidden");
+            $("answer-card").scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          } else {
+            // ── RELEVANT ANSWER — restore normal styling ────────────
+            const ansBlock = $("ans-block");
+            ansBlock.style.background = "var(--blue-bg)";
+            ansBlock.style.borderColor = "var(--blue)";
+            $("ans-label").style.color = "var(--blue)";
+            $("ans-label").textContent = "Answer";
+
+            // Show all sections
+            $("ev-section").style.display = "";
+            $("clip-section").style.display = "";
+            $("ev-divider").style.display = "";
+            $("clip-divider").style.display = "";
+
+            $("ans-text").textContent = d.answer;
+
+            const ar = d.answer_relevance || 0;
+            const egs = d.evidence_grounding || 0;
+
+            // Colour metric values based on score
+            const arEl = $("mc-ar");
+            const egsEl = $("mc-egs");
+            arEl.textContent = ar.toFixed(3);
+            egsEl.textContent = egs.toFixed(3);
+            arEl.className = "mc-val " + (ar >= 0.5 ? "high" : "med");
+            egsEl.className = "mc-val " + (egs >= 0.5 ? "high" : "med");
+            $("mc-ar-bar").style.width = ar * 100 + "%";
+            $("mc-egs-bar").style.width = egs * 100 + "%";
+            $("mc-ar-bar").className =
+              "mc-fill " + (ar >= 0.5 ? "green" : "amber");
+            $("mc-egs-bar").className =
+              "mc-fill " + (egs >= 0.5 ? "green" : "amber");
+            $("mc-clip").textContent =
+              d.clip_start.toFixed(1) + "s – " + d.clip_end.toFixed(1) + "s";
+
+            // Evidence
+            $("ev-audio-text").textContent = '"' + d.text_match + '"';
+            $("ev-audio-time").textContent = d.text_match_time;
+            $("ev-audio-sc").textContent = "AR " + ar.toFixed(2);
+            $("ev-vis-text").textContent = '"' + d.visual_match + '"';
+            $("ev-vis-time").textContent = d.visual_match_time;
+
+            // Load real video clip — use blob URL so ngrok header gets sent
+            const clipRes = await apiFetch(API_URL + "/clip?cb=" + Date.now());
+            if (clipRes.ok) {
+              const blob = await clipRes.blob();
+              const blobUrl = URL.createObjectURL(blob);
+              const vid = $("clip-video");
+              if (vid._blobUrl) URL.revokeObjectURL(vid._blobUrl); // free previous
+              vid._blobUrl = blobUrl;
+              vid.src = blobUrl;
+              vid.style.display = "block";
+              $("clip-placeholder").style.display = "none";
+              vid.load();
+            }
+
+            $("snum2").textContent = "✓";
+            $("snum2").className = "step-num done";
+
+            $("answer-card").classList.remove("hidden");
+            $("answer-card").scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        } catch (e) {
+          showBanner("error", "Query failed: " + e.message);
+        }
+
+        $("ask-btn").disabled = false;
+        $("ask-inner").innerHTML =
+          `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Ask`;
+      }
+
+      // Keep process btn state in sync with API connection
+      $("qi").addEventListener("input", () => {
+        const hasText = $("qi").value.trim().length > 0;
+        $("qbox").classList.toggle("filled", hasText);
+        if (videoReady) $("ask-btn").disabled = !hasText;
+      });
+    </script>
+  </body>
+</html>

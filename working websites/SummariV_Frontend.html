@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SummariV — Video Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      :root {
+        --ink: #1a1a2e;
+        --ink2: #3d3d5c;
+        --ink3: #7c7c99;
+        --ink4: #adadc4;
+        --paper: #fafaf8;
+        --paper2: #f3f2ef;
+        --paper3: #eceae5;
+        --line: #e2e0da;
+        --accent: #3b5bdb;
+        --accent-l: #e8ecff;
+        --accent-m: #8fa3f5;
+        --green: #2f9e44;
+        --green-l: #ebfbee;
+        --red: #e03131;
+        --red-l: #fff5f5;
+        --amber: #e67700;
+        --amber-l: #fff8e1;
+        --radius: 14px;
+        --radius-sm: 8px;
+        --shadow:
+          0 1px 3px rgba(26, 26, 46, 0.06), 0 4px 16px rgba(26, 26, 46, 0.05);
+        --shadow-md:
+          0 2px 8px rgba(26, 26, 46, 0.08), 0 12px 40px rgba(26, 26, 46, 0.08);
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        min-height: 100vh;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+          radial-gradient(
+            ellipse 80% 50% at 10% -10%,
+            rgba(59, 91, 219, 0.06) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 90% 100%,
+            rgba(47, 158, 68, 0.04) 0%,
+            transparent 60%
+          ),
+          var(--paper);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        background: rgba(250, 250, 248, 0.88);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--line);
+        padding: 0 40px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        text-decoration: none;
+      }
+      .logo-mark {
+        width: 34px;
+        height: 34px;
+        background: var(--accent);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        box-shadow: 0 2px 8px rgba(59, 91, 219, 0.3);
+      }
+      .logo-wordmark {
+        font-family: "DM Serif Display", serif;
+        font-size: 20px;
+        color: var(--ink);
+        letter-spacing: -0.3px;
+      }
+      .logo-wordmark em {
+        font-style: italic;
+        color: var(--accent);
+      }
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .swagger-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink3);
+        background: var(--paper2);
+        border: 1px solid var(--line);
+        border-radius: 99px;
+        padding: 6px 14px;
+        text-decoration: none;
+        transition: all 0.18s;
+        letter-spacing: 0.3px;
+      }
+      .swagger-link:hover {
+        border-color: var(--accent-m);
+        color: var(--accent);
+      }
+      .conn-badge {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--ink3);
+        background: var(--paper2);
+        border: 1px solid var(--line);
+        border-radius: 99px;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: all 0.18s;
+        user-select: none;
+      }
+      .conn-badge:hover {
+        border-color: var(--accent-m);
+        color: var(--ink2);
+      }
+      .conn-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--ink4);
+        flex-shrink: 0;
+        transition: background 0.3s;
+      }
+      .conn-dot.online {
+        background: var(--green);
+        box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.18);
+      }
+      main {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+      }
+      .sect-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--ink4);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sect-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+      .url-bar {
+        background: var(--paper2);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 40px;
+        transition: border-color 0.2s;
+      }
+      .url-bar:focus-within {
+        border-color: var(--accent-m);
+      }
+      .url-bar-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink3);
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+      }
+      .url-bar input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-size: 13px;
+        font-family: "DM Sans", sans-serif;
+        color: var(--accent);
+        caret-color: var(--accent);
+      }
+      .url-bar input::placeholder {
+        color: var(--ink4);
+      }
+      .btn-connect {
+        padding: 7px 18px;
+        background: var(--ink);
+        color: #fff;
+        font-size: 12.5px;
+        font-weight: 600;
+        font-family: "DM Sans", sans-serif;
+        border: none;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: all 0.18s;
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+      }
+      .btn-connect:hover {
+        background: var(--accent);
+        transform: translateY(-1px);
+      }
+      .upload-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 28px;
+        overflow: hidden;
+        transition: box-shadow 0.2s;
+      }
+      .upload-card:hover {
+        box-shadow: var(--shadow-md);
+      }
+      .drop-zone {
+        padding: 52px 40px;
+        text-align: center;
+        cursor: pointer;
+        position: relative;
+        transition: background 0.18s;
+        border-bottom: 1px solid transparent;
+      }
+      .drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .drop-zone:hover,
+      .drop-zone.drag {
+        background: var(--accent-l);
+      }
+      .drop-zone.drag {
+        border-bottom-color: var(--accent-m);
+      }
+      .drop-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--paper2);
+        border: 1.5px solid var(--line);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin: 0 auto 18px;
+        transition: all 0.18s;
+      }
+      .drop-zone:hover .drop-icon,
+      .drop-zone.drag .drop-icon {
+        background: var(--accent-l);
+        border-color: var(--accent-m);
+      }
+      .drop-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 6px;
+      }
+      .drop-sub {
+        font-size: 13px;
+        color: var(--ink3);
+      }
+      .drop-sub span {
+        color: var(--accent);
+        font-weight: 500;
+      }
+      .stats-row {
+        display: none;
+        padding: 0;
+        border-top: 1px solid var(--line);
+      }
+      .stat-item {
+        flex: 1;
+        padding: 14px 20px;
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .stat-item:last-child {
+        border-right: none;
+      }
+      .stat-val {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--ink);
+        letter-spacing: -0.5px;
+        font-family: "DM Serif Display", serif;
+      }
+      .stat-key {
+        font-size: 11px;
+        color: var(--ink3);
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+      }
+      .progress-panel {
+        display: none;
+        padding: 20px 24px;
+        border-top: 1px solid var(--line);
+        background: var(--paper2);
+      }
+      .progress-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .progress-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink2);
+      }
+      .progress-sub {
+        font-size: 12px;
+        color: var(--ink3);
+      }
+      .track {
+        height: 5px;
+        background: var(--line);
+        border-radius: 99px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .fill {
+        height: 100%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, var(--accent), #7c93f5);
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 0%;
+      }
+      .fill.running {
+        animation: shimmer 1.8s ease-in-out infinite;
+        width: 25% !important;
+      }
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-150%);
+          opacity: 0.8;
+        }
+        100% {
+          transform: translateX(500%);
+          opacity: 0.8;
+        }
+      }
+      .stages {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .stage {
+        font-size: 11.5px;
+        font-weight: 500;
+        padding: 5px 12px;
+        border-radius: 99px;
+        border: 1px solid var(--line);
+        color: var(--ink4);
+        background: var(--paper);
+        transition: all 0.25s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .stage .s-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.4;
+      }
+      .stage.active {
+        color: var(--accent);
+        border-color: var(--accent-m);
+        background: var(--accent-l);
+      }
+      .stage.active .s-dot {
+        opacity: 1;
+        animation: blink 1.2s ease-in-out infinite;
+      }
+      .stage.done {
+        color: var(--green);
+        border-color: rgba(47, 158, 68, 0.35);
+        background: var(--green-l);
+      }
+      .stage.done .s-dot {
+        opacity: 1;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .inline-alert {
+        display: none;
+        margin-top: 14px;
+        padding: 11px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      .inline-alert.err {
+        background: var(--red-l);
+        border: 1px solid rgba(224, 49, 49, 0.2);
+        color: var(--red);
+      }
+      .inline-alert.ok {
+        background: var(--green-l);
+        border: 1px solid rgba(47, 158, 68, 0.2);
+        color: var(--green);
+      }
+      .inline-alert.info {
+        background: var(--accent-l);
+        border: 1px solid rgba(59, 91, 219, 0.15);
+        color: var(--accent);
+      }
+      .query-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 24px;
+        margin-bottom: 28px;
+        transition: box-shadow 0.2s;
+      }
+      .query-card:hover {
+        box-shadow: var(--shadow-md);
+      }
+      .query-field-wrap {
+        position: relative;
+      }
+      .query-field {
+        width: 100%;
+        padding: 14px 130px 14px 18px;
+        background: var(--paper2);
+        border: 1.5px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-size: 15px;
+        font-family: "DM Sans", sans-serif;
+        color: var(--ink);
+        outline: none;
+        transition: all 0.2s;
+        line-height: 1.5;
+      }
+      .query-field:focus {
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(59, 91, 219, 0.07);
+      }
+      .query-field:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .query-field::placeholder {
+        color: var(--ink4);
+      }
+      .ask-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 9px 22px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 13.5px;
+        font-weight: 600;
+        font-family: "DM Sans", sans-serif;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.18s;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+      }
+      .ask-btn:hover:not(:disabled) {
+        background: #2f4cba;
+        box-shadow: 0 3px 12px rgba(59, 91, 219, 0.35);
+      }
+      .ask-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .ask-btn .spin {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: rot 0.7s linear infinite;
+        display: none;
+        flex-shrink: 0;
+      }
+      @keyframes rot {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #answer-card {
+        display: none;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        animation: fadeUp 0.3s ease;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .answer-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ans-badge {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 4px 12px;
+        border-radius: 99px;
+      }
+      .ans-badge.found {
+        background: var(--green-l);
+        color: var(--green);
+        border: 1px solid rgba(47, 158, 68, 0.25);
+      }
+      .ans-badge.miss {
+        background: var(--red-l);
+        color: var(--red);
+        border: 1px solid rgba(224, 49, 49, 0.2);
+      }
+      .ans-query-text {
+        flex: 1;
+        font-size: 13px;
+        color: var(--ink3);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-style: italic;
+      }
+      .conf-wrap {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .conf-label {
+        font-size: 12px;
+        color: var(--ink3);
+        font-weight: 500;
+      }
+      .conf-track {
+        width: 64px;
+        height: 4px;
+        background: var(--line);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .conf-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .answer-body {
+        padding: 24px;
+      }
+      .answer-qlabel {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--ink4);
+        margin-bottom: 8px;
+      }
+      .answer-text-block {
+        font-size: 16.5px;
+        line-height: 1.75;
+        color: var(--ink);
+        padding: 20px 24px 20px 28px;
+        background: var(--paper2);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        margin-bottom: 24px;
+      }
+      .answer-text-block.miss-style {
+        border-left-color: var(--red);
+        background: var(--red-l);
+        color: var(--red);
+      }
+      #clip-wrap {
+        display: none;
+      }
+      .clip-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .clip-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink2);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .ts-chip {
+        font-size: 12px;
+        font-weight: 600;
+        font-family: monospace;
+        background: var(--accent-l);
+        color: var(--accent);
+        border: 1px solid rgba(59, 91, 219, 0.2);
+        padding: 4px 12px;
+        border-radius: 99px;
+      }
+      .video-frame {
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        background: #000;
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      .video-frame video {
+        width: 100%;
+        max-height: 400px;
+        display: block;
+      }
+      .ctx-toggle {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        background: none;
+        border-bottom: none;
+        border-left: none;
+        border-right: none;
+        font-size: 12.5px;
+        color: var(--ink3);
+        font-family: "DM Sans", sans-serif;
+        cursor: pointer;
+        transition: color 0.15s;
+        width: 100%;
+        text-align: left;
+      }
+      .ctx-toggle:hover {
+        color: var(--ink2);
+      }
+      .ctx-arrow {
+        font-size: 10px;
+        transition: transform 0.2s;
+      }
+      .ctx-arrow.open {
+        transform: rotate(90deg);
+      }
+      .ctx-body {
+        display: none;
+        margin-top: 12px;
+        padding: 14px;
+        background: var(--paper2);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        color: var(--ink3);
+        line-height: 1.7;
+        font-family: monospace;
+      }
+      footer {
+        text-align: center;
+        padding: 28px;
+        font-size: 12px;
+        color: var(--ink4);
+        border-top: 1px solid var(--line);
+        margin-top: 40px;
+      }
+      footer strong {
+        color: var(--ink3);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="logo" href="#">
+        <div class="logo-mark">🎬</div>
+        <span class="logo-wordmark">Summari<em>V</em></span>
+      </a>
+      <div class="header-right">
+        <a
+          class="swagger-link"
+          id="swagger-link"
+          href="#"
+          target="_blank"
+          title="Open Swagger API docs"
+        >
+          📄 API Docs
+        </a>
+        <div
+          class="conn-badge"
+          onclick="checkHealth()"
+          title="Click to test connection"
+        >
+          <div class="conn-dot" id="conn-dot"></div>
+          <span id="conn-text">Not connected</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="url-bar">
+        <span class="url-bar-label">Backend</span>
+        <input
+          type="text"
+          id="backend-url"
+          placeholder="Paste your ngrok URL — e.g. https://xxxx.ngrok-free.app"
+        />
+        <button class="btn-connect" onclick="checkHealth()">Connect</button>
+      </div>
+
+      <div class="sect-label">Upload Video</div>
+
+      <div class="upload-card" id="upload-card">
+        <div class="drop-zone" id="drop-zone">
+          <input
+            type="file"
+            id="file-input"
+            accept="video/*"
+            onchange="handleFile(event)"
+          />
+          <div class="drop-icon">🎥</div>
+          <div class="drop-title" id="drop-title">Drop your video here</div>
+          <div class="drop-sub" id="drop-sub">
+            or <span>browse files</span> — MP4, MKV, AVI, MOV
+          </div>
+        </div>
+
+        <div class="stats-row" id="stats-row">
+          <div class="stat-item" id="sw1">
+            <div class="stat-val" id="stat-audio">—</div>
+            <div class="stat-key">Audio Segments</div>
+          </div>
+          <div class="stat-item" id="sw2">
+            <div class="stat-val" id="stat-visual">—</div>
+            <div class="stat-key">Visual Frames</div>
+          </div>
+          <div class="stat-item" id="sw3">
+            <div class="stat-val" id="stat-duration">—</div>
+            <div class="stat-key">Duration</div>
+          </div>
+          <div class="stat-item" id="sw4">
+            <div class="stat-val" id="stat-api">—</div>
+            <div class="stat-key">LLM Provider</div>
+          </div>
+        </div>
+
+        <div class="progress-panel" id="progress-panel">
+          <div class="progress-top">
+            <span class="progress-title" id="prog-title"
+              >Starting pipeline...</span
+            >
+            <span class="progress-sub" id="prog-sub"></span>
+          </div>
+          <div class="track">
+            <div class="fill running" id="prog-fill"></div>
+          </div>
+          <div class="stages">
+            <div class="stage" id="st-upload">
+              <span class="s-dot"></span>Upload
+            </div>
+            <div class="stage" id="st-whisper">
+              <span class="s-dot"></span>Whisper ASR
+            </div>
+            <div class="stage" id="st-blip">
+              <span class="s-dot"></span>BLIP Captions
+            </div>
+            <div class="stage" id="st-faiss">
+              <span class="s-dot"></span>FAISS Index
+            </div>
+            <div class="stage" id="st-ready">
+              <span class="s-dot"></span>Ready
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="upload-alert"
+          class="inline-alert"
+          style="margin: 0 20px 14px"
+        ></div>
+      </div>
+
+      <div class="sect-label">Ask a Question</div>
+
+      <div class="query-card">
+        <div class="query-field-wrap">
+          <input
+            type="text"
+            id="query-field"
+            class="query-field"
+            placeholder="Ask something specific about the video content..."
+            disabled
+            onkeydown="if (event.key === 'Enter') askQuestion();"
+          />
+          <button class="ask-btn" id="ask-btn" onclick="askQuestion()" disabled>
+            <div class="spin" id="ask-spin"></div>
+            <span id="ask-txt">Ask</span>
+          </button>
+        </div>
+        <div
+          id="query-alert"
+          class="inline-alert"
+          style="margin-top: 12px"
+        ></div>
+      </div>
+
+      <div class="sect-label" id="answer-sect-label" style="display: none">
+        Answer
+      </div>
+
+      <div id="answer-card">
+        <div class="answer-header">
+          <div class="ans-badge" id="ans-badge">—</div>
+          <div class="ans-query-text" id="ans-query-text"></div>
+          <div class="conf-wrap">
+            <span class="conf-label" id="conf-label">—</span>
+            <div class="conf-track">
+              <div class="conf-fill" id="conf-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="answer-body">
+          <div class="answer-qlabel">Generated Answer</div>
+          <div class="answer-text-block" id="ans-text">—</div>
+          <div id="clip-wrap">
+            <div class="clip-meta">
+              <div class="clip-label">📍 Evidence Clip</div>
+              <div class="ts-chip" id="ts-chip">—</div>
+            </div>
+            <div class="video-frame">
+              <video
+                id="clip-video"
+                controls
+                autoplay
+                muted
+                playsinline
+              ></video>
+            </div>
+          </div>
+          <button
+            class="ctx-toggle"
+            id="ctx-toggle"
+            onclick="toggleCtx()"
+            style="display: none"
+          >
+            <span class="ctx-arrow" id="ctx-arrow">▶</span>
+            <span id="ctx-toggle-txt">View retrieved context</span>
+          </button>
+          <div class="ctx-body" id="ctx-body"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <strong>SummariV</strong> &nbsp;—&nbsp; Multimodal RAG for Educational
+      Video Q&amp;A &nbsp;·&nbsp; PVPSIT Final Year Project
+    </footer>
+
+    <script>
+      // ── Config ──────────────────────────────────────────────────
+      const DEFAULT_URL = "PASTE_NGROK_URL_HERE";
+
+      // ngrok requires this header on every request to skip the browser warning page
+      // Without it, ngrok returns its own HTML page which has no CORS headers → blocked
+      const NGROK_HEADERS = { "ngrok-skip-browser-warning": "1" };
+
+      // ── State ───────────────────────────────────────────────────
+      let backend = DEFAULT_URL;
+      let online = false;
+      let ready = false;
+      let pollId = null;
+
+      // ── Helpers ─────────────────────────────────────────────────
+      const $ = (id) => document.getElementById(id);
+      const getBackend = () =>
+        ($("backend-url").value || "").trim().replace(/\/+$/, "");
+
+      function setOnline(v) {
+        online = v;
+        $("conn-dot").className = "conn-dot" + (v ? " online" : "");
+        $("conn-text").textContent = v ? "Server online" : "Not connected";
+      }
+
+      function showAlert(id, type, msg) {
+        const el = $(id);
+        el.className = `inline-alert ${type}`;
+        el.style.display = "flex";
+        const icon = type === "err" ? "⚠" : type === "ok" ? "✓" : "ℹ";
+        el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+      }
+      function hideAlert(id) {
+        const e = $(id);
+        if (e) e.style.display = "none";
+      }
+
+      function setStage(id, state) {
+        const el = $(`st-${id}`);
+        if (!el) return;
+        el.className =
+          "stage" +
+          (state === "active" ? " active" : state === "done" ? " done" : "");
+      }
+
+      function fmtSecs(s) {
+        if (s == null) return "—";
+        const m = Math.floor(s / 60),
+          sec = (s % 60).toFixed(1).padStart(4, "0");
+        return `${m}:${sec}`;
+      }
+      function fmtDuration(s) {
+        if (!s) return "—";
+        const m = Math.floor(s / 60),
+          sec = Math.round(s % 60);
+        return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+      }
+
+      function updateSwaggerLink(url) {
+        const el = $("swagger-link");
+        if (url && url.startsWith("http")) {
+          el.href = `${url}/docs`;
+        }
+      }
+
+      // ── Health check ────────────────────────────────────────────
+      async function checkHealth() {
+        const url = getBackend();
+        if (!url || url === DEFAULT_URL || !url.startsWith("http")) {
+          showAlert(
+            "upload-alert",
+            "err",
+            "Paste a valid ngrok URL (starts with https://) and try again.",
+          );
+          return;
+        }
+        backend = url;
+        localStorage.setItem("sv_backend", url);
+        updateSwaggerLink(url);
+        try {
+          const r = await fetch(`${backend}/health`, {
+            signal: AbortSignal.timeout(6000),
+            headers: NGROK_HEADERS,
+          });
+          if (r.ok) {
+            const d = await r.json();
+            setOnline(true);
+            hideAlert("upload-alert");
+            if (d.api_provider) $("stat-api").textContent = d.api_provider;
+            pollStatus();
+          } else {
+            setOnline(false);
+            showAlert(
+              "upload-alert",
+              "err",
+              "Server error. Check Colab Cell 6 is running.",
+            );
+          }
+        } catch {
+          setOnline(false);
+          showAlert(
+            "upload-alert",
+            "err",
+            "Cannot reach server. Make sure Cell 6 is running and the ngrok URL is correct.",
+          );
+        }
+      }
+
+      // ── Drag & drop ─────────────────────────────────────────────
+      const dz = $("drop-zone");
+      dz.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dz.classList.add("drag");
+      });
+      dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
+      dz.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dz.classList.remove("drag");
+        if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
+      });
+      function handleFile(e) {
+        if (e.target.files.length) processFile(e.target.files[0]);
+      }
+
+      // ── Upload ───────────────────────────────────────────────────
+      async function processFile(file) {
+        if (!online) {
+          showAlert("upload-alert", "err", "Connect to the backend first.");
+          return;
+        }
+        const ext = file.name.split(".").pop().toLowerCase();
+        if (!["mp4", "mkv", "avi", "mov", "webm"].includes(ext)) {
+          showAlert(
+            "upload-alert",
+            "err",
+            "Unsupported format. Use MP4, MKV, AVI, or MOV.",
+          );
+          return;
+        }
+        hideAlert("upload-alert");
+        $("drop-title").textContent = file.name;
+        $("drop-sub").textContent =
+          `${(file.size / 1024 / 1024).toFixed(1)} MB — uploading...`;
+        $("progress-panel").style.display = "block";
+        $("stats-row").style.display = "none";
+        setStage("upload", "active");
+        $("prog-title").textContent = "Uploading video...";
+
+        const fd = new FormData();
+        fd.append("video", file);
+        try {
+          // Note: do NOT include Content-Type in headers for FormData —
+          // the browser sets it automatically with the correct boundary.
+          // Only add the ngrok header here.
+          const r = await fetch(`${backend}/upload`, {
+            method: "POST",
+            body: fd,
+            headers: NGROK_HEADERS,
+          });
+          if (!r.ok) {
+            const d = await r.json().catch(() => ({}));
+            showAlert("upload-alert", "err", d.detail || "Upload failed.");
+            $("progress-panel").style.display = "none";
+            return;
+          }
+        } catch {
+          showAlert("upload-alert", "err", "Network error during upload.");
+          $("progress-panel").style.display = "none";
+          return;
+        }
+
+        setStage("upload", "done");
+        $("drop-sub").textContent =
+          `${(file.size / 1024 / 1024).toFixed(1)} MB — processing pipeline...`;
+        $("prog-title").textContent =
+          "Running pipeline... (2–5 min depending on video length)";
+        startPoll();
+      }
+
+      // ── Polling ──────────────────────────────────────────────────
+      function startPoll() {
+        if (pollId) clearInterval(pollId);
+        setStage("whisper", "active");
+        pollId = setInterval(pollStatus, 3000);
+      }
+
+      async function pollStatus() {
+        try {
+          const r = await fetch(`${backend}/status`, {
+            signal: AbortSignal.timeout(5000),
+            headers: NGROK_HEADERS,
+          });
+          if (!r.ok) return;
+          const d = await r.json();
+          setOnline(true);
+
+          if (d.error) {
+            clearInterval(pollId);
+            showAlert("upload-alert", "err", `Pipeline error: ${d.error}`);
+            $("progress-panel").style.display = "none";
+            return;
+          }
+
+          if (d.processing) {
+            if (d.stage === "whisper") {
+              setStage("whisper", "active");
+              $("prog-title").textContent =
+                "Transcribing audio with Whisper...";
+            }
+            if (d.stage === "blip") {
+              setStage("whisper", "done");
+              setStage("blip", "active");
+              $("prog-title").textContent =
+                `Generating visual captions with BLIP... (${d.audio_segments} audio segments)`;
+            }
+            if (d.stage === "faiss") {
+              setStage("blip", "done");
+              setStage("faiss", "active");
+              $("prog-title").textContent =
+                `Building FAISS vector index... (${d.visual_segments} visual frames)`;
+            }
+          }
+
+          if (d.ready) {
+            clearInterval(pollId);
+            setStage("blip", "done");
+            setStage("faiss", "done");
+            setStage("ready", "done");
+            const fill = $("prog-fill");
+            fill.classList.remove("running");
+            fill.style.width = "100%";
+            $("prog-title").textContent = "Video indexed — ready for questions";
+            $("prog-sub").textContent =
+              `${d.audio_segments} audio · ${d.visual_segments} visual segments`;
+            $("drop-sub").textContent = d.video_name;
+            showStats(d);
+            ready = true;
+            enableQuery();
+            showAlert(
+              "upload-alert",
+              "ok",
+              `Ready! ${d.audio_segments} audio segments and ${d.visual_segments} visual frames indexed.`,
+            );
+          }
+        } catch {
+          /* retry on next tick */
+        }
+      }
+
+      function showStats(d) {
+        $("stat-audio").textContent = d.audio_segments;
+        $("stat-visual").textContent = d.visual_segments;
+        $("stat-duration").textContent = fmtDuration(d.duration);
+        $("stats-row").style.display = "flex";
+        // fetch api provider from health
+        fetch(`${backend}/health`, { headers: NGROK_HEADERS })
+          .then((r) => r.json())
+          .then((h) => {
+            if (h.api_provider) $("stat-api").textContent = h.api_provider;
+          })
+          .catch(() => {});
+      }
+
+      // ── Query ─────────────────────────────────────────────────────
+      function enableQuery() {
+        $("query-field").disabled = false;
+        $("ask-btn").disabled = false;
+        $("query-field").focus();
+        $("query-field").placeholder = "Type your question about the video...";
+      }
+
+      async function askQuestion() {
+        if (!ready) {
+          showAlert("query-alert", "err", "Upload and process a video first.");
+          return;
+        }
+        const q = $("query-field").value.trim();
+        if (!q) {
+          showAlert("query-alert", "err", "Please enter a question.");
+          return;
+        }
+
+        hideAlert("query-alert");
+        $("ask-btn").disabled = true;
+        $("ask-spin").style.display = "block";
+        $("ask-txt").textContent = "Thinking...";
+        $("answer-card").style.display = "none";
+        $("answer-sect-label").style.display = "none";
+
+        try {
+          const fd = new FormData();
+          fd.append("q", q);
+          const r = await fetch(`${backend}/query`, {
+            method: "POST",
+            body: fd,
+            headers: NGROK_HEADERS,
+            signal: AbortSignal.timeout(60000),
+          });
+          if (!r.ok) {
+            const d = await r.json().catch(() => ({}));
+            showAlert(
+              "query-alert",
+              r.status === 425 ? "info" : "err",
+              d.detail || "Query failed.",
+            );
+            return;
+          }
+          renderAnswer(q, await r.json());
+        } catch (e) {
+          showAlert(
+            "query-alert",
+            "err",
+            e.name === "TimeoutError"
+              ? "Request timed out — try again."
+              : "Network error.",
+          );
+        } finally {
+          $("ask-btn").disabled = false;
+          $("ask-spin").style.display = "none";
+          $("ask-txt").textContent = "Ask";
+        }
+      }
+
+      // ── Render answer ─────────────────────────────────────────────
+      function renderAnswer(query, data) {
+        $("answer-sect-label").style.display = "flex";
+        $("answer-card").style.display = "block";
+
+        const badge = $("ans-badge");
+        if (data.found) {
+          badge.className = "ans-badge found";
+          badge.textContent = "Answer Found";
+        } else {
+          badge.className = "ans-badge miss";
+          badge.textContent = "Not in Video";
+        }
+
+        $("ans-query-text").textContent = `"${query}"`;
+
+        const pct = Math.round((data.confidence || 0) * 100);
+        $("conf-label").textContent = `${pct}%`;
+        const fill = $("conf-fill");
+        fill.style.width = `${pct}%`;
+        fill.style.background =
+          pct >= 60
+            ? "var(--green)"
+            : pct >= 35
+              ? "var(--amber)"
+              : "var(--red)";
+
+        const atEl = $("ans-text");
+        atEl.textContent = data.answer;
+        atEl.className =
+          "answer-text-block" + (data.found ? "" : " miss-style");
+
+        const cw = $("clip-wrap");
+        if (data.found && data.clip_id) {
+          cw.style.display = "block";
+          $("ts-chip").textContent =
+            `${fmtSecs(data.timestamp_start)} → ${fmtSecs(data.timestamp_end)}`;
+          const vid = $("clip-video");
+          // Fetch clip as blob URL to avoid CORS issues with video src
+          fetch(`${backend}/clip/${data.clip_id}`, { headers: NGROK_HEADERS })
+            .then((r) => r.blob())
+            .then((blob) => {
+              vid.src = URL.createObjectURL(blob);
+              vid.load();
+              vid.play().catch(() => {});
+            })
+            .catch(() => {
+              // fallback: direct src
+              vid.src = `${backend}/clip/${data.clip_id}`;
+              vid.load();
+            });
+        } else {
+          cw.style.display = "none";
+        }
+
+        const ctBtn = $("ctx-toggle");
+        if (data.context_preview) {
+          ctBtn.style.display = "flex";
+          $("ctx-body").textContent = data.context_preview;
+        } else {
+          ctBtn.style.display = "none";
+        }
+
+        $("answer-card").scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+
+      // ── Context toggle ─────────────────────────────────────────────
+      function toggleCtx() {
+        const body = $("ctx-body"),
+          arrow = $("ctx-arrow");
+        const open = body.style.display === "block";
+        body.style.display = open ? "none" : "block";
+        arrow.className = "ctx-arrow" + (open ? "" : " open");
+        $("ctx-toggle-txt").textContent = open
+          ? "View retrieved context"
+          : "Hide retrieved context";
+      }
+
+      // ── Init ────────────────────────────────────────────────────────
+      (function () {
+        const saved = localStorage.getItem("sv_backend");
+        if (saved && saved !== DEFAULT_URL) {
+          $("backend-url").value = saved;
+          backend = saved;
+          updateSwaggerLink(saved);
+        }
+        $("backend-url").addEventListener("change", () => {
+          const v = $("backend-url").value.trim();
+          localStorage.setItem("sv_backend", v);
+          backend = v;
+          updateSwaggerLink(v);
+        });
+        $("stats-row").style.display = "none";
+        if (backend.startsWith("http") && backend !== DEFAULT_URL) {
+          setTimeout(checkHealth, 400);
+        }
+      })();
+    </script>
+  </body>
+</html>

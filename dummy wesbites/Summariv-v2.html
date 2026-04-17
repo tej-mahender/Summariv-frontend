@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SummariV — Video Q&A Demo</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #f4f4f1;
+        --surface: #ffffff;
+        --border: #e2e1d9;
+        --border2: #cccbc3;
+        --text: #1c1c1a;
+        --muted: #6a6a65;
+        --blue: #185fa5;
+        --blue-light: #e8f2fc;
+        --blue-mid: #378add;
+        --green: #3b6d11;
+        --green-light: #eaf3de;
+        --green-mid: #639922;
+        --red: #a32d2d;
+        --red-light: #fcebeb;
+        --amber: #854f0b;
+        --amber-light: #faeeda;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      /* ── DEMO CONTROL BAR ── */
+      .demo-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: #1c1c1a;
+        color: #f4f4f1;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .demo-bar span {
+        font-size: 12px;
+        color: #888;
+        margin-right: 4px;
+      }
+      .demo-btn {
+        padding: 6px 14px;
+        border: 1px solid #444;
+        border-radius: 6px;
+        background: transparent;
+        color: #f4f4f1;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+      .demo-btn:hover {
+        background: #333;
+        border-color: #666;
+      }
+      .demo-btn.active {
+        background: #185fa5;
+        border-color: #378add;
+        color: white;
+      }
+      .demo-bar-title {
+        font-size: 13px;
+        font-weight: 600;
+        margin-right: 8px;
+        color: #ddd;
+      }
+
+      /* ── MAIN UI ── */
+      .page {
+        padding: 2rem 1rem 3rem;
+      }
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      header h1 {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.8px;
+        color: var(--text);
+      }
+      header .sub {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      header .tag {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        padding: 3px 12px;
+        border-radius: 20px;
+        background: var(--blue-light);
+        color: var(--blue);
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.5rem 1.6rem;
+        margin-bottom: 1.2rem;
+        transition: box-shadow 0.2s;
+      }
+      .card.highlighted {
+        border-color: var(--blue-mid);
+        box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.12);
+      }
+      .card-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .step-num {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--blue-light);
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .step-num.done {
+        background: var(--green-light);
+        color: var(--green);
+      }
+
+      /* Drop zone */
+      .drop-zone {
+        border: 2px dashed var(--border2);
+        border-radius: 10px;
+        padding: 2.8rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+      }
+      .drop-zone.has-file {
+        border-color: var(--green-mid);
+        border-style: solid;
+        background: #f6fbef;
+      }
+      .dz-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+      }
+      .dz-main {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .dz-sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 5px;
+      }
+      .dz-file {
+        font-size: 13px;
+        color: var(--green);
+        font-weight: 600;
+        margin-top: 10px;
+      }
+      .dz-size {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+
+      /* Progress steps */
+      .progress-section {
+        margin-top: 18px;
+      }
+      .prog-bar {
+        height: 6px;
+        background: #ede;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .prog-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition:
+          width 0.5s ease,
+          background 0.3s;
+      }
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+      .step-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid var(--border2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: all 0.3s;
+        background: var(--bg);
+      }
+      .step-dot.done {
+        background: var(--green-light);
+        border-color: var(--green-mid);
+        color: var(--green);
+      }
+      .step-dot.active {
+        background: var(--blue-light);
+        border-color: var(--blue-mid);
+        color: var(--blue);
+        animation: pulse 1s infinite;
+      }
+      .step-dot.wait {
+        background: var(--bg);
+        border-color: var(--border);
+        color: var(--border2);
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .step-name {
+        font-size: 10px;
+        color: var(--muted);
+        text-align: center;
+        font-weight: 500;
+      }
+      .step-name.done {
+        color: var(--green);
+      }
+      .step-name.active {
+        color: var(--blue);
+      }
+      .status-line {
+        font-size: 13px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .spinner {
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--border);
+        border-top-color: var(--blue-mid);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Query */
+      .query-wrap {
+        display: flex;
+        gap: 10px;
+      }
+      .query-wrap input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1.5px solid var(--border2);
+        border-radius: 9px;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--surface);
+        outline: none;
+        font-family: inherit;
+      }
+      .query-wrap input:focus {
+        border-color: var(--blue-mid);
+        box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.12);
+      }
+      .query-wrap input.filled {
+        border-color: var(--blue-mid);
+      }
+      .ask-btn {
+        padding: 12px 24px;
+        background: var(--blue);
+        color: white;
+        border: none;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+        white-space: nowrap;
+        font-family: inherit;
+      }
+      .ask-btn:hover {
+        background: #0c447c;
+      }
+      .ask-btn:disabled {
+        background: var(--border);
+        color: var(--muted);
+        cursor: default;
+      }
+      .ask-btn.thinking {
+        background: #854f0b;
+      }
+
+      /* Answer panel */
+      .answer-card {
+        border-color: var(--blue-mid);
+      }
+      .answer-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .answer-title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 11px;
+        border-radius: 20px;
+      }
+      .badge-green {
+        background: var(--green-light);
+        color: var(--green);
+      }
+      .badge-blue {
+        background: var(--blue-light);
+        color: var(--blue);
+      }
+      .badge-amber {
+        background: var(--amber-light);
+        color: var(--amber);
+      }
+      .answer-box {
+        background: #f9f9f7;
+        border-radius: 10px;
+        padding: 1.1rem 1.3rem;
+        font-size: 15px;
+        line-height: 1.75;
+        color: var(--text);
+        margin-bottom: 16px;
+        border-left: 3px solid var(--blue-mid);
+      }
+      .metrics-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .metric-pill {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 7px 13px;
+        font-size: 12px;
+      }
+      .metric-label {
+        color: var(--muted);
+      }
+      .metric-value {
+        font-weight: 700;
+        font-size: 15px;
+      }
+      .metric-value.high {
+        color: var(--green);
+      }
+      .metric-value.med {
+        color: var(--amber);
+      }
+      .ev-section {
+        margin-bottom: 16px;
+      }
+      .ev-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .ev-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .ev-card {
+        background: #f9f9f7;
+        border-radius: 9px;
+        padding: 10px 13px;
+        border: 1px solid var(--border);
+      }
+      .ev-modality {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+      .ev-modality.audio {
+        color: var(--blue);
+      }
+      .ev-modality.visual {
+        color: #8b5cf6;
+      }
+      .ev-text {
+        font-size: 12px;
+        color: var(--text);
+        line-height: 1.5;
+      }
+      .ev-time {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 5px;
+      }
+      .clip-section {
+      }
+      .clip-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .clip-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      .clip-badge {
+        font-size: 11px;
+        background: var(--blue-light);
+        color: var(--blue);
+        padding: 3px 11px;
+        border-radius: 20px;
+        font-weight: 600;
+      }
+      .video-frame {
+        background: #111;
+        border-radius: 10px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .video-placeholder {
+        text-align: center;
+        color: #fff;
+      }
+      .video-placeholder .play-btn {
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin: 0 auto 10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+      .video-placeholder p {
+        font-size: 13px;
+        opacity: 0.7;
+      }
+      .video-placeholder .timecode {
+        font-size: 12px;
+        opacity: 0.5;
+        margin-top: 4px;
+      }
+      .video-controls {
+        background: #222;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .vc-btn {
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+        opacity: 0.8;
+      }
+      .vc-bar {
+        flex: 1;
+        height: 4px;
+        background: #444;
+        border-radius: 2px;
+        position: relative;
+      }
+      .vc-fill {
+        height: 100%;
+        background: var(--blue-mid);
+        border-radius: 2px;
+        width: 35%;
+      }
+      .vc-time {
+        font-size: 11px;
+        color: #888;
+      }
+
+      /* Summary */
+      .summary-body {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.8;
+        background: #f9f9f7;
+        border-radius: 9px;
+        padding: 14px 16px;
+      }
+
+      hr.div {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 16px 0;
+      }
+
+      /* Hidden state classes */
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- DEMO CONTROL BAR -->
+    <div class="demo-bar">
+      <div class="demo-bar-title">📸 Screenshot States:</div>
+      <span>State →</span>
+      <button class="demo-btn active" id="btn-s0" onclick="setState(0)">
+        ① Initial
+      </button>
+      <button class="demo-btn" id="btn-s1" onclick="setState(1)">
+        ② Video Selected
+      </button>
+      <button class="demo-btn" id="btn-s2" onclick="setState(2)">
+        ③ Processing
+      </button>
+      <button class="demo-btn" id="btn-s3" onclick="setState(3)">
+        ④ Ready to Query
+      </button>
+      <button class="demo-btn" id="btn-s4" onclick="setState(4)">
+        ⑤ Query Entered
+      </button>
+      <button class="demo-btn" id="btn-s5" onclick="setState(5)">
+        ⑥ Full Output
+      </button>
+    </div>
+
+    <div class="page">
+      <div class="container">
+        <!-- HEADER -->
+        <header>
+          <h1>SummariV</h1>
+          <div class="sub">
+            Multimodal Video Question Answering for Educational Content
+          </div>
+          <div class="tag">RAG · Whisper · BLIP · FAISS · Flan-T5</div>
+        </header>
+
+        <!-- CARD 1: UPLOAD -->
+        <div class="card" id="card-upload">
+          <div class="card-label">
+            <div class="step-num" id="snum1">1</div>
+            Upload Video
+          </div>
+
+          <!-- State 0: empty drop zone -->
+          <div class="drop-zone" id="dz-empty">
+            <div class="dz-icon">🎬</div>
+            <div class="dz-main">Click to upload or drag &amp; drop</div>
+            <div class="dz-sub">MP4 · MOV · AVI &nbsp;·&nbsp; Up to 500 MB</div>
+          </div>
+
+          <!-- State 1: file selected -->
+          <div class="drop-zone has-file hidden" id="dz-chosen">
+            <div class="dz-icon">✅</div>
+            <div class="dz-main" style="color: var(--green)">
+              Video ready for processing
+            </div>
+            <div class="dz-file">
+              📎 &nbsp;Introduction_to_Machine_Learning.mp4
+            </div>
+            <div class="dz-size">
+              Duration: 18 min 42 sec &nbsp;·&nbsp; 312 MB
+            </div>
+          </div>
+
+          <!-- Processing progress -->
+          <div class="progress-section hidden" id="progress-section">
+            <div class="prog-bar">
+              <div
+                class="prog-fill"
+                id="prog-fill"
+                style="width: 0%; background: var(--blue-mid)"
+              ></div>
+            </div>
+            <div class="steps-grid">
+              <div class="step-item">
+                <div class="step-dot" id="sd1">1</div>
+                <div class="step-name" id="sn1">Transcription</div>
+              </div>
+              <div class="step-item">
+                <div class="step-dot" id="sd2">2</div>
+                <div class="step-name" id="sn2">Frame Extract</div>
+              </div>
+              <div class="step-item">
+                <div class="step-dot" id="sd3">3</div>
+                <div class="step-name" id="sn3">Visual Caption</div>
+              </div>
+              <div class="step-item">
+                <div class="step-dot" id="sd4">4</div>
+                <div class="step-name" id="sn4">Embedding</div>
+              </div>
+              <div class="step-item">
+                <div class="step-dot" id="sd5">✓</div>
+                <div class="step-name" id="sn5">Ready</div>
+              </div>
+            </div>
+            <div class="status-line" id="status-line">
+              <div class="spinner hidden" id="spinner"></div>
+              <span id="status-text"></span>
+            </div>
+          </div>
+
+          <!-- Summary (after processing) -->
+          <div class="hidden" id="summary-block" style="margin-top: 16px">
+            <hr class="div" style="margin-top: 0" />
+            <div class="card-label" style="margin-bottom: 10px">
+              <span style="font-size: 12px">📋</span> Video Summary
+            </div>
+            <div class="summary-body">
+              This lecture introduces the core concepts of machine learning,
+              beginning with a distinction between supervised and unsupervised
+              learning paradigms. The instructor explains gradient descent as an
+              optimisation algorithm used to minimise loss functions, walking
+              through step-by-step visual examples on a 2D cost surface. Key
+              topics covered include linear regression, logistic regression,
+              neural network fundamentals, and the bias-variance tradeoff. The
+              session concludes with a practical demonstration of training a
+              simple classifier on the MNIST dataset using Python.
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: QUERY -->
+        <div class="card" id="card-query">
+          <div class="card-label">
+            <div class="step-num" id="snum2">2</div>
+            Ask a Question
+          </div>
+          <div class="query-wrap">
+            <input
+              type="text"
+              id="query-input"
+              placeholder="e.g.  What is gradient descent?"
+            />
+            <button class="ask-btn" id="ask-btn" disabled>Ask ↗</button>
+          </div>
+          <div
+            style="margin-top: 10px; font-size: 12px; color: var(--muted)"
+            id="query-hint"
+          >
+            Upload and process a video first to enable querying.
+          </div>
+        </div>
+
+        <!-- CARD 3: ANSWER (hidden initially) -->
+        <div class="card answer-card hidden" id="card-answer">
+          <div class="answer-header">
+            <div class="answer-title">Answer</div>
+            <div class="badge badge-green">Answer Relevance: 88%</div>
+            <div class="badge badge-blue">Evidence Grounding: 91%</div>
+          </div>
+
+          <div class="answer-box" id="answer-box">
+            Gradient descent is an iterative optimisation algorithm that
+            minimises a loss function by repeatedly updating model parameters in
+            the direction of the steepest decrease of the gradient. At each
+            step, the parameters are adjusted by a small amount proportional to
+            the learning rate, moving toward the minimum of the cost surface.
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-pill">
+              <div class="metric-label">Answer Relevance</div>
+              <div class="metric-value high">0.882</div>
+            </div>
+            <div class="metric-pill">
+              <div class="metric-label">Evidence Grounding</div>
+              <div class="metric-value high">0.914</div>
+            </div>
+            <div class="metric-pill">
+              <div class="metric-label">Temporal Localisation</div>
+              <div class="metric-value high">0.833</div>
+            </div>
+            <div class="metric-pill">
+              <div class="metric-label">Clip Window</div>
+              <div
+                class="metric-value"
+                style="font-size: 13px; color: var(--blue)"
+              >
+                7 m 23 s – 9 m 41 s
+              </div>
+            </div>
+          </div>
+
+          <hr class="div" />
+
+          <div class="ev-section">
+            <div class="ev-title">Retrieved Evidence</div>
+            <div class="ev-cards">
+              <div class="ev-card">
+                <div class="ev-modality audio">🎙 Audio Transcript</div>
+                <div class="ev-text">
+                  "Gradient descent works by computing the gradient of the loss
+                  with respect to each parameter, then subtracting a fraction of
+                  that gradient to update the weights iteratively."
+                </div>
+                <div class="ev-time">
+                  ⏱ 7 min 31 s – 7 min 58 s &nbsp;·&nbsp; Score: 0.921
+                </div>
+              </div>
+              <div class="ev-card">
+                <div class="ev-modality visual">🖼 Visual Frame</div>
+                <div class="ev-text">
+                  "A 3D bowl-shaped cost surface diagram with an arrow showing
+                  the path of gradient descent steps from a starting point
+                  toward the minimum."
+                </div>
+                <div class="ev-time">
+                  ⏱ 8 min 14 s &nbsp;·&nbsp; Score: 0.873
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="div" />
+
+          <div class="clip-section">
+            <div class="clip-header">
+              <div class="clip-title">📹 Evidence Clip</div>
+              <div class="clip-badge">7 m 23 s – 9 m 41 s</div>
+            </div>
+            <div class="video-frame">
+              <div class="video-placeholder">
+                <div class="play-btn">▶</div>
+                <p>Introduction_to_Machine_Learning.mp4</p>
+                <div class="timecode">
+                  07:23 — 09:41 &nbsp;·&nbsp; Gradient Descent Explanation
+                </div>
+              </div>
+            </div>
+            <div class="video-controls">
+              <div class="vc-btn">▶</div>
+              <div class="vc-bar"><div class="vc-fill"></div></div>
+              <div class="vc-time">07:23 / 09:41</div>
+              <div class="vc-btn">⛶</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /container -->
+    </div>
+    <!-- /page -->
+
+    <script>
+      // ── State definitions ──────────────────────────────────────────────────────
+      const states = [
+        // 0: Initial — empty, nothing uploaded
+        {
+          dzEmpty: true,
+          dzChosen: false,
+          progressSection: false,
+          summaryBlock: false,
+          stepNum1Done: false,
+          stepNum2Done: false,
+          cardUploadHighlight: false,
+          cardQueryHighlight: false,
+          queryValue: "",
+          queryFilled: false,
+          askDisabled: true,
+          askThinking: false,
+          queryHint: "Upload and process a video first to enable querying.",
+          cardAnswer: false,
+          progWidth: 0,
+          progColor: "var(--blue-mid)",
+          steps: ["wait", "wait", "wait", "wait", "wait"],
+          statusText: "",
+          spinnerOn: false,
+        },
+        // 1: Video selected — shown in drop zone
+        {
+          dzEmpty: false,
+          dzChosen: true,
+          progressSection: false,
+          summaryBlock: false,
+          stepNum1Done: false,
+          stepNum2Done: false,
+          cardUploadHighlight: true,
+          cardQueryHighlight: false,
+          queryValue: "",
+          queryFilled: false,
+          askDisabled: true,
+          askThinking: false,
+          queryHint: "Upload and process a video first to enable querying.",
+          cardAnswer: false,
+          progWidth: 0,
+          progColor: "var(--blue-mid)",
+          steps: ["wait", "wait", "wait", "wait", "wait"],
+          statusText: "",
+          spinnerOn: false,
+        },
+        // 2: Processing — mid-way (3 of 5 steps done)
+        {
+          dzEmpty: false,
+          dzChosen: true,
+          progressSection: true,
+          summaryBlock: false,
+          stepNum1Done: false,
+          stepNum2Done: false,
+          cardUploadHighlight: true,
+          cardQueryHighlight: false,
+          queryValue: "",
+          queryFilled: false,
+          askDisabled: true,
+          askThinking: false,
+          queryHint: "Processing video — please wait…",
+          cardAnswer: false,
+          progWidth: 58,
+          progColor: "var(--blue-mid)",
+          steps: ["done", "done", "active", "wait", "wait"],
+          statusText: "Generating visual captions with BLIP…",
+          spinnerOn: true,
+        },
+        // 3: Ready — processing complete, summary visible
+        {
+          dzEmpty: false,
+          dzChosen: true,
+          progressSection: true,
+          summaryBlock: true,
+          stepNum1Done: true,
+          stepNum2Done: false,
+          cardUploadHighlight: false,
+          cardQueryHighlight: true,
+          queryValue: "",
+          queryFilled: false,
+          askDisabled: true,
+          askThinking: false,
+          queryHint: "Video indexed — type your question below.",
+          cardAnswer: false,
+          progWidth: 100,
+          progColor: "var(--green-mid)",
+          steps: ["done", "done", "done", "done", "done"],
+          statusText:
+            "✓ Processing complete — 1122 segments indexed, 561 frames captioned",
+          spinnerOn: false,
+        },
+        // 4: Query entered — text typed, button ready
+        {
+          dzEmpty: false,
+          dzChosen: true,
+          progressSection: true,
+          summaryBlock: true,
+          stepNum1Done: true,
+          stepNum2Done: false,
+          cardUploadHighlight: false,
+          cardQueryHighlight: true,
+          queryValue: "What is gradient descent and how does it work?",
+          queryFilled: true,
+          askDisabled: false,
+          askThinking: false,
+          queryHint: "",
+          cardAnswer: false,
+          progWidth: 100,
+          progColor: "var(--green-mid)",
+          steps: ["done", "done", "done", "done", "done"],
+          statusText:
+            "✓ Processing complete — 1122 segments indexed, 561 frames captioned",
+          spinnerOn: false,
+        },
+        // 5: Full output — answer + evidence + clip
+        {
+          dzEmpty: false,
+          dzChosen: true,
+          progressSection: true,
+          summaryBlock: true,
+          stepNum1Done: true,
+          stepNum2Done: true,
+          cardUploadHighlight: false,
+          cardQueryHighlight: false,
+          queryValue: "What is gradient descent and how does it work?",
+          queryFilled: true,
+          askDisabled: false,
+          askThinking: false,
+          queryHint: "",
+          cardAnswer: true,
+          progWidth: 100,
+          progColor: "var(--green-mid)",
+          steps: ["done", "done", "done", "done", "done"],
+          statusText:
+            "✓ Processing complete — 1122 segments indexed, 561 frames captioned",
+          spinnerOn: false,
+        },
+      ];
+
+      function setState(n) {
+        const s = states[n];
+        // Buttons
+        document
+          .querySelectorAll(".demo-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById("btn-s" + n).classList.add("active");
+
+        // Drop zone
+        document
+          .getElementById("dz-empty")
+          .classList.toggle("hidden", !s.dzEmpty);
+        document
+          .getElementById("dz-chosen")
+          .classList.toggle("hidden", !s.dzChosen);
+        document
+          .getElementById("progress-section")
+          .classList.toggle("hidden", !s.progressSection);
+        document
+          .getElementById("summary-block")
+          .classList.toggle("hidden", !s.summaryBlock);
+
+        // Upload card highlight
+        document
+          .getElementById("card-upload")
+          .classList.toggle("highlighted", s.cardUploadHighlight);
+        document
+          .getElementById("card-query")
+          .classList.toggle("highlighted", s.cardQueryHighlight);
+
+        // Step numbers
+        const sn1 = document.getElementById("snum1");
+        sn1.textContent = s.stepNum1Done ? "✓" : "1";
+        sn1.className = "step-num" + (s.stepNum1Done ? " done" : "");
+        const sn2 = document.getElementById("snum2");
+        sn2.textContent = s.stepNum2Done ? "✓" : "2";
+        sn2.className = "step-num" + (s.stepNum2Done ? " done" : "");
+
+        // Progress bar
+        document.getElementById("prog-fill").style.width = s.progWidth + "%";
+        document.getElementById("prog-fill").style.background = s.progColor;
+
+        // Step dots
+        const dotIds = ["sd1", "sd2", "sd3", "sd4", "sd5"];
+        const nameIds = ["sn1", "sn2", "sn3", "sn4", "sn5"];
+        const labels = [
+          "Transcription",
+          "Frame Extract",
+          "Visual Caption",
+          "Embedding",
+          "Ready",
+        ];
+        s.steps.forEach((state, i) => {
+          const d = document.getElementById(dotIds[i]);
+          const nm = document.getElementById(nameIds[i]);
+          d.className = "step-dot " + state;
+          d.textContent = state === "done" ? "✓" : (i + 1).toString();
+          nm.className = "step-name " + state;
+          nm.textContent = labels[i];
+        });
+
+        // Status
+        document.getElementById("status-text").textContent = s.statusText;
+        document
+          .getElementById("spinner")
+          .classList.toggle("hidden", !s.spinnerOn);
+
+        // Query
+        document.getElementById("query-input").value = s.queryValue;
+        document
+          .getElementById("query-input")
+          .classList.toggle("filled", s.queryFilled);
+        document.getElementById("ask-btn").disabled = s.askDisabled;
+        document.getElementById("ask-btn").className =
+          "ask-btn" + (s.askThinking ? " thinking" : "");
+        document.getElementById("ask-btn").textContent = s.askThinking
+          ? "Searching…"
+          : "Ask ↗";
+        const hint = document.getElementById("query-hint");
+        hint.textContent = s.queryHint;
+        hint.style.display = s.queryHint ? "" : "none";
+
+        // Answer
+        document
+          .getElementById("card-answer")
+          .classList.toggle("hidden", !s.cardAnswer);
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // Start at state 0
+      setState(0);
+    </script>
+  </body>
+</html>
