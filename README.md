@@ -155,8 +155,6 @@ Evaluated on the **EDU-VSUM** dataset with 44 manually annotated question-answer
 
 | Metric | Score |
 |---|---|
-| ROUGE-L | 0.5619 |
-| BLEU-4 | 0.3101 |
 | Answer Relevance (AR) | 0.6705 |
 | Evidence Grounding Score (EGS) | 0.6705 |
 | Temporal Localisation Accuracy (TLA) | 1.0000 |
